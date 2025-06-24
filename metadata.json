@@ -1,0 +1,6 @@
+{
+  "name": "智游无界: 智能旅行规划助手",
+  "description": "一个基于大模型的个性化智能旅行规划助手，旨在提供从自然语言需求到完整可行旅行方案的智能规划服务，并拥有媲美Apple产品般精致的UI/UX体验。",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
