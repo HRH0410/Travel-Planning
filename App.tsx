@@ -7,6 +7,7 @@ import { UserDemand, TravelPlan, AppView } from './types';
 import { startPlanningSession, getPlanningResult, modifyExistingPlan } from './services/geminiService';
 import { POLLING_INTERVAL, MAX_POLLS, APP_NAME } from './constants';
 import { Button } from './components/ui/Button'; // Import Button for the header
+import logoImage from "./components/Logo.png"; 
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>(AppView.Home);
@@ -152,7 +153,7 @@ const App: React.FC = () => {
             onClick={handleGoHome}
           >
             <img 
-              src={logoImageUrl} 
+              src={logoImage} 
               alt="应用Logo" 
               className="w-8 h-8 mr-3 object-contain rounded-md transition-transform duration-300 ease-out group-hover:scale-110" 
             />
