@@ -4,6 +4,7 @@ import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { APP_NAME, APP_SLOGAN } from '../constants';
 import { AppView } from '../types';
+import logoImage from "../components/Logo.png"; 
 
 interface HomePageProps {
   setView: (view: AppView) => void;
@@ -90,7 +91,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description, del
 };
 
 export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
-  const logoImageUrl = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80";
+  const logoImageUrl = "components\Logo.png";
 
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
@@ -135,7 +136,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
         <header className={`max-w-3xl mb-10 md:mb-12 transform transition-all duration-1000 ease-out ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
           <div className="group w-48 h-48 md:w-56 md:h-56 bg-white rounded-full mx-auto mb-8 flex items-center justify-center shadow-xl overflow-hidden transition-all duration-300 ease-out hover:scale-105 hover:shadow-2xl hover:shadow-sky-300/50">
             <img 
-              src={logoImageUrl} 
+              src={logoImage} 
               alt="品牌Logo - 智游无界" 
               className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
             />
