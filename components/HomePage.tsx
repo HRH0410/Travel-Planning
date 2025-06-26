@@ -7,6 +7,7 @@ import { AppView } from '../types';
 
 interface HomePageProps {
   setView: (view: AppView) => void;
+  onShowSampleData?: () => void;
 }
 
 interface AuroraBlobProps {

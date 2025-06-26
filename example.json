@@ -1,0 +1,670 @@
+{
+    "people_number": 2,
+    "start_city": "南京",
+    "target_city": "苏州",
+    "itinerary": [
+        {
+            "day": 1,
+            "activities": [
+                {
+                    "start_time": "00:03",
+                    "end_time": "02:32",
+                    "start": "南京站",
+                    "end": "苏州站",
+                    "TrainID": "Z175",
+                    "type": "train",
+                    "transports": [],
+                    "cost": 94.54,
+                    "tickets": 2
+                },
+                {
+                    "position": "平江路历史街区",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏州站",
+                            "end": "苏州火车站-地铁站",
+                            "mode": "walk",
+                            "start_time": "02:32",
+                            "end_time": "02:33",
+                            "cost": 0,
+                            "distance": 0.13
+                        },
+                        {
+                            "start": "苏州火车站-地铁站",
+                            "end": "相门-地铁站",
+                            "mode": "metro",
+                            "start_time": "02:33",
+                            "end_time": "02:40",
+                            "cost": 2,
+                            "distance": 3.57,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "相门-地铁站",
+                            "end": "平江路历史街区",
+                            "mode": "walk",
+                            "start_time": "02:40",
+                            "end_time": "02:53",
+                            "cost": 0,
+                            "distance": 1.14
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "02:53",
+                    "end_time": "04:23"
+                },
+                {
+                    "position": "苏州丝绸博物馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "平江路历史街区",
+                            "end": "相门-地铁站",
+                            "mode": "walk",
+                            "start_time": "04:23",
+                            "end_time": "04:36",
+                            "cost": 0,
+                            "distance": 1.14
+                        },
+                        {
+                            "start": "相门-地铁站",
+                            "end": "拙政园苏博-地铁站",
+                            "mode": "metro",
+                            "start_time": "04:36",
+                            "end_time": "04:39",
+                            "cost": 2,
+                            "distance": 1.89,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "拙政园苏博-地铁站",
+                            "end": "苏州丝绸博物馆",
+                            "mode": "walk",
+                            "start_time": "04:39",
+                            "end_time": "04:46",
+                            "cost": 0,
+                            "distance": 0.66
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "09:00",
+                    "end_time": "10:00"
+                },
+                {
+                    "position": "苏州博物馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏州丝绸博物馆",
+                            "end": "拙政园苏博-地铁站",
+                            "mode": "walk",
+                            "start_time": "10:00",
+                            "end_time": "10:07",
+                            "cost": 0,
+                            "distance": 0.66
+                        },
+                        {
+                            "start": "拙政园苏博-地铁站",
+                            "end": "梅巷-地铁站",
+                            "mode": "metro",
+                            "start_time": "10:07",
+                            "end_time": "10:09",
+                            "cost": 2,
+                            "distance": 1.4,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "梅巷-地铁站",
+                            "end": "苏州博物馆",
+                            "mode": "walk",
+                            "start_time": "10:09",
+                            "end_time": "10:18",
+                            "cost": 0,
+                            "distance": 0.79
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "10:18",
+                    "end_time": "11:48"
+                },
+                {
+                    "position": "松鹤楼(苏州中心商城店)",
+                    "type": "lunch",
+                    "transports": [
+                        {
+                            "start": "苏州博物馆",
+                            "end": "梅巷-地铁站",
+                            "mode": "walk",
+                            "start_time": "11:48",
+                            "end_time": "11:57",
+                            "cost": 0,
+                            "distance": 0.79
+                        },
+                        {
+                            "start": "梅巷-地铁站",
+                            "end": "东方之门-地铁站",
+                            "mode": "metro",
+                            "start_time": "11:57",
+                            "end_time": "12:07",
+                            "cost": 3,
+                            "distance": 5.03,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "东方之门-地铁站",
+                            "end": "松鹤楼(苏州中心商城店)",
+                            "mode": "walk",
+                            "start_time": "12:07",
+                            "end_time": "12:09",
+                            "cost": 0,
+                            "distance": 0.2
+                        }
+                    ],
+                    "cost": 173,
+                    "start_time": "12:09",
+                    "end_time": "13:39"
+                },
+                {
+                    "position": "苏州博物馆西馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "松鹤楼(苏州中心商城店)",
+                            "end": "东方之门-地铁站",
+                            "mode": "walk",
+                            "start_time": "13:39",
+                            "end_time": "13:41",
+                            "cost": 0,
+                            "distance": 0.2
+                        },
+                        {
+                            "start": "东方之门-地铁站",
+                            "end": "狮山路-地铁站",
+                            "mode": "metro",
+                            "start_time": "13:41",
+                            "end_time": "14:04",
+                            "cost": 4,
+                            "distance": 11.68,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "狮山路-地铁站",
+                            "end": "苏州博物馆西馆",
+                            "mode": "walk",
+                            "start_time": "14:04",
+                            "end_time": "14:09",
+                            "cost": 0,
+                            "distance": 0.42
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "14:09",
+                    "end_time": "16:09"
+                },
+                {
+                    "position": "寒山寺",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏州博物馆西馆",
+                            "end": "狮山路-地铁站",
+                            "mode": "walk",
+                            "start_time": "16:09",
+                            "end_time": "16:14",
+                            "cost": 0,
+                            "distance": 0.42
+                        },
+                        {
+                            "start": "狮山路-地铁站",
+                            "end": "虎丘-地铁站",
+                            "mode": "metro",
+                            "start_time": "16:14",
+                            "end_time": "16:22",
+                            "cost": 3,
+                            "distance": 4.49,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "虎丘-地铁站",
+                            "end": "寒山寺",
+                            "mode": "walk",
+                            "start_time": "16:22",
+                            "end_time": "16:40",
+                            "cost": 0,
+                            "distance": 1.57
+                        }
+                    ],
+                    "cost": 18,
+                    "start_time": "16:40",
+                    "end_time": "17:30"
+                },
+                {
+                    "position": "金海华·华宴(小石湖店)",
+                    "type": "dinner",
+                    "transports": [
+                        {
+                            "start": "寒山寺",
+                            "end": "虎丘-地铁站",
+                            "mode": "walk",
+                            "start_time": "17:30",
+                            "end_time": "17:48",
+                            "cost": 0,
+                            "distance": 1.57
+                        },
+                        {
+                            "start": "虎丘-地铁站",
+                            "end": "石湖莫舍-地铁站",
+                            "mode": "metro",
+                            "start_time": "17:48",
+                            "end_time": "18:11",
+                            "cost": 4,
+                            "distance": 11.96,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "石湖莫舍-地铁站",
+                            "end": "金海华·华宴(小石湖店)",
+                            "mode": "walk",
+                            "start_time": "18:11",
+                            "end_time": "18:21",
+                            "cost": 0,
+                            "distance": 0.91
+                        }
+                    ],
+                    "cost": 545,
+                    "start_time": "18:21",
+                    "end_time": "19:51"
+                },
+                {
+                    "position": "苏州图书馆北馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "金海华·华宴(小石湖店)",
+                            "end": "石湖莫舍-地铁站",
+                            "mode": "walk",
+                            "start_time": "19:51",
+                            "end_time": "20:01",
+                            "cost": 0,
+                            "distance": 0.91
+                        },
+                        {
+                            "start": "石湖莫舍-地铁站",
+                            "end": "活力岛-地铁站",
+                            "mode": "metro",
+                            "start_time": "20:01",
+                            "end_time": "20:34",
+                            "cost": 5,
+                            "distance": 16.66,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "活力岛-地铁站",
+                            "end": "苏州图书馆北馆",
+                            "mode": "walk",
+                            "start_time": "20:34",
+                            "end_time": "20:38",
+                            "cost": 0,
+                            "distance": 0.37
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "20:38",
+                    "end_time": "21:00"
+                },
+                {
+                    "position": "苏州东太湖智选假日酒店",
+                    "type": "accommodation",
+                    "room_type": 1,
+                    "transports": [
+                        {
+                            "start": "苏州图书馆北馆",
+                            "end": "活力岛-地铁站",
+                            "mode": "walk",
+                            "start_time": "21:00",
+                            "end_time": "21:04",
+                            "cost": 0,
+                            "distance": 0.37
+                        },
+                        {
+                            "start": "活力岛-地铁站",
+                            "end": "苏州湾东-地铁站",
+                            "mode": "metro",
+                            "start_time": "21:04",
+                            "end_time": "21:56",
+                            "cost": 6,
+                            "distance": 26.43,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "苏州湾东-地铁站",
+                            "end": "苏州东太湖智选假日酒店",
+                            "mode": "walk",
+                            "start_time": "21:56",
+                            "end_time": "22:02",
+                            "cost": 0,
+                            "distance": 0.58
+                        }
+                    ],
+                    "cost": 446.0,
+                    "start_time": "22:02",
+                    "end_time": "24:00",
+                    "rooms": 2
+                }
+            ]
+        },
+        {
+            "day": 2,
+            "activities": [
+                {
+                    "position": "苏州东太湖智选假日酒店",
+                    "type": "breakfast",
+                    "transports": [],
+                    "cost": 0,
+                    "start_time": "08:00",
+                    "end_time": "08:30"
+                },
+                {
+                    "position": "苏州碑刻博物馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏州东太湖智选假日酒店",
+                            "end": "苏州湾东-地铁站",
+                            "mode": "walk",
+                            "start_time": "08:30",
+                            "end_time": "08:36",
+                            "cost": 0,
+                            "distance": 0.58
+                        },
+                        {
+                            "start": "苏州湾东-地铁站",
+                            "end": "望星桥苏大-地铁站",
+                            "mode": "metro",
+                            "start_time": "08:36",
+                            "end_time": "09:12",
+                            "cost": 5,
+                            "distance": 18.49,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "望星桥苏大-地铁站",
+                            "end": "苏州碑刻博物馆",
+                            "mode": "walk",
+                            "start_time": "09:12",
+                            "end_time": "09:18",
+                            "cost": 0,
+                            "distance": 0.53
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "09:18",
+                    "end_time": "09:48"
+                },
+                {
+                    "position": "苏州湾博物馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏州碑刻博物馆",
+                            "end": "望星桥苏大-地铁站",
+                            "mode": "walk",
+                            "start_time": "09:48",
+                            "end_time": "09:54",
+                            "cost": 0,
+                            "distance": 0.53
+                        },
+                        {
+                            "start": "望星桥苏大-地铁站",
+                            "end": "苏州湾东-地铁站",
+                            "mode": "metro",
+                            "start_time": "09:54",
+                            "end_time": "10:30",
+                            "cost": 5,
+                            "distance": 18.49,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "苏州湾东-地铁站",
+                            "end": "苏州湾博物馆",
+                            "mode": "walk",
+                            "start_time": "10:30",
+                            "end_time": "10:55",
+                            "cost": 0,
+                            "distance": 2.16
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "10:55",
+                    "end_time": "11:55"
+                },
+                {
+                    "position": "苏苑饭店中餐厅",
+                    "type": "lunch",
+                    "transports": [
+                        {
+                            "start": "苏州湾博物馆",
+                            "end": "苏州湾东-地铁站",
+                            "mode": "walk",
+                            "start_time": "11:55",
+                            "end_time": "12:20",
+                            "cost": 0,
+                            "distance": 2.16
+                        },
+                        {
+                            "start": "苏州湾东-地铁站",
+                            "end": "团结桥-地铁站",
+                            "mode": "metro",
+                            "start_time": "12:20",
+                            "end_time": "12:51",
+                            "cost": 5,
+                            "distance": 15.54,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "团结桥-地铁站",
+                            "end": "苏苑饭店中餐厅",
+                            "mode": "walk",
+                            "start_time": "12:51",
+                            "end_time": "12:55",
+                            "cost": 0,
+                            "distance": 0.34
+                        }
+                    ],
+                    "cost": 99,
+                    "start_time": "12:55",
+                    "end_time": "14:25"
+                },
+                {
+                    "position": "苏州园林博物馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏苑饭店中餐厅",
+                            "end": "团结桥-地铁站",
+                            "mode": "walk",
+                            "start_time": "14:25",
+                            "end_time": "14:29",
+                            "cost": 0,
+                            "distance": 0.34
+                        },
+                        {
+                            "start": "团结桥-地铁站",
+                            "end": "梅巷-地铁站",
+                            "mode": "metro",
+                            "start_time": "14:29",
+                            "end_time": "14:42",
+                            "cost": 3,
+                            "distance": 6.56,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "梅巷-地铁站",
+                            "end": "苏州园林博物馆",
+                            "mode": "walk",
+                            "start_time": "14:42",
+                            "end_time": "14:52",
+                            "cost": 0,
+                            "distance": 0.87
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "14:52",
+                    "end_time": "16:30"
+                },
+                {
+                    "position": "苏州W酒店·WOOBAR酒吧",
+                    "type": "dinner",
+                    "transports": [
+                        {
+                            "start": "苏州园林博物馆",
+                            "end": "梅巷-地铁站",
+                            "mode": "walk",
+                            "start_time": "16:30",
+                            "end_time": "16:40",
+                            "cost": 0,
+                            "distance": 0.87
+                        },
+                        {
+                            "start": "梅巷-地铁站",
+                            "end": "东方之门-地铁站",
+                            "mode": "metro",
+                            "start_time": "16:40",
+                            "end_time": "16:50",
+                            "cost": 3,
+                            "distance": 5.03,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "东方之门-地铁站",
+                            "end": "苏州W酒店·WOOBAR酒吧",
+                            "mode": "walk",
+                            "start_time": "16:50",
+                            "end_time": "16:54",
+                            "cost": 0,
+                            "distance": 0.36
+                        }
+                    ],
+                    "cost": 162,
+                    "start_time": "17:00",
+                    "end_time": "18:30"
+                },
+                {
+                    "position": "苏州商会博物馆",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏州W酒店·WOOBAR酒吧",
+                            "end": "东方之门-地铁站",
+                            "mode": "walk",
+                            "start_time": "18:30",
+                            "end_time": "18:34",
+                            "cost": 0,
+                            "distance": 0.36
+                        },
+                        {
+                            "start": "东方之门-地铁站",
+                            "end": "苏州火车站-地铁站",
+                            "mode": "metro",
+                            "start_time": "18:34",
+                            "end_time": "18:47",
+                            "cost": 3,
+                            "distance": 6.7,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "苏州火车站-地铁站",
+                            "end": "苏州商会博物馆",
+                            "mode": "walk",
+                            "start_time": "18:47",
+                            "end_time": "18:55",
+                            "cost": 0,
+                            "distance": 0.71
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "18:55",
+                    "end_time": "20:00"
+                },
+                {
+                    "position": "苏州文化艺术中心",
+                    "type": "attraction",
+                    "transports": [
+                        {
+                            "start": "苏州商会博物馆",
+                            "end": "苏州火车站-地铁站",
+                            "mode": "walk",
+                            "start_time": "20:00",
+                            "end_time": "20:08",
+                            "cost": 0,
+                            "distance": 0.71
+                        },
+                        {
+                            "start": "苏州火车站-地铁站",
+                            "end": "文化博览中心-地铁站",
+                            "mode": "metro",
+                            "start_time": "20:08",
+                            "end_time": "20:25",
+                            "cost": 3,
+                            "distance": 8.98,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "文化博览中心-地铁站",
+                            "end": "苏州文化艺术中心",
+                            "mode": "walk",
+                            "start_time": "20:25",
+                            "end_time": "20:33",
+                            "cost": 0,
+                            "distance": 0.69
+                        }
+                    ],
+                    "cost": 0,
+                    "start_time": "20:33",
+                    "end_time": "21:00"
+                },
+                {
+                    "start_time": "23:39",
+                    "end_time": "02:23",
+                    "start": "苏州站",
+                    "end": "南京站",
+                    "TrainID": "K8366",
+                    "type": "train",
+                    "transports": [
+                        {
+                            "start": "苏州文化艺术中心",
+                            "end": "文化博览中心-地铁站",
+                            "mode": "walk",
+                            "start_time": "21:00",
+                            "end_time": "21:08",
+                            "cost": 0,
+                            "distance": 0.69
+                        },
+                        {
+                            "start": "文化博览中心-地铁站",
+                            "end": "苏州火车站-地铁站",
+                            "mode": "metro",
+                            "start_time": "21:08",
+                            "end_time": "21:25",
+                            "cost": 3,
+                            "distance": 8.98,
+                            "tickets": 2
+                        },
+                        {
+                            "start": "苏州火车站-地铁站",
+                            "end": "苏州站",
+                            "mode": "walk",
+                            "start_time": "21:25",
+                            "end_time": "21:26",
+                            "cost": 0,
+                            "distance": 0.13
+                        }
+                    ],
+                    "cost": 75.63,
+                    "tickets": 2
+                }
+            ]
+        }
+    ]
+}

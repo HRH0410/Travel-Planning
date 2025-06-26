@@ -9,13 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "uuid": "^11.1.0",
+    "@amap/amap-jsapi-loader": "^1.0.1",
     "@google/genai": "^1.6.0",
-    "react-dom": "^19.1.0"
+    "@types/react-router-dom": "^5.3.3",
+    "react": "^19.1.0",
+    "react-amap": "^1.2.8",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.2",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@types/react": "^19.1.8",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }

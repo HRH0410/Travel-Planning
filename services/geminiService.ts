@@ -1,7 +1,8 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { UserDemand, TravelPlan, DailyPlan, Activity, POIDetail, TransportDetail } from '../types';
+import { UserDemand, TravelPlan, DailyPlan, Activity, POIDetail } from '../types';
 import { GEMINI_TEXT_MODEL, MOCK_TASK_ID_PREFIX } from '../constants';
+import { geocodeAddress, extractLocationName, isValidCoordinate } from './geocodingService';
 import { v4 as uuidv4 } from 'uuid';
 
 // Ensure API_KEY is available in the environment.
@@ -16,11 +17,46 @@ if (!API_KEY) {
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 const planningRequests: Record<string, UserDemand> = {};
+const completedPlans: Record<string, TravelPlan> = {}; // 缓存已完成的计划
+
+// 初始化时从localStorage恢复数据
+const initializeFromStorage = () => {
+  if (typeof window !== 'undefined') {
+    try {
+      // 恢复已完成的计划
+      const savedPlans = JSON.parse(localStorage.getItem('completedPlans') || '{}');
+      Object.assign(completedPlans, savedPlans);
+      
+      // 恢复请求数据
+      const savedRequests = JSON.parse(localStorage.getItem('planningRequests') || '{}');
+      Object.assign(planningRequests, savedRequests);
+    } catch (e) {
+      console.warn('无法从localStorage恢复数据:', e);
+    }
+  }
+};
+
+// 页面加载时初始化
+if (typeof window !== 'undefined') {
+  initializeFromStorage();
+}
 
 export const startPlanningSession = async (demand: UserDemand): Promise<{ taskId: string }> => {
   const taskId = `${MOCK_TASK_ID_PREFIX}${uuidv4()}`;
   planningRequests[taskId] = demand;
-  await new Promise(resolve => setTimeout(resolve, 500)); 
+  
+  // 在localStorage中也保存一份，用于页面刷新后恢复
+  if (typeof window !== 'undefined') {
+    try {
+      const savedRequests = JSON.parse(localStorage.getItem('planningRequests') || '{}');
+      savedRequests[taskId] = demand;
+      localStorage.setItem('planningRequests', JSON.stringify(savedRequests));
+    } catch (e) {
+      console.warn('无法保存到localStorage:', e);
+    }
+  }
+  
+  await new Promise(resolve => setTimeout(resolve, 10)); 
   return { taskId };
 };
 
@@ -40,9 +76,9 @@ const parseGeminiResponseToTravelPlan = (responseText: string, demand: UserDeman
       try {
         // Evaluate simple sums like "580 + 800 + 280"
         if (exprStr.includes('+') && !exprStr.match(/[^\d\s.+]/)) { // Only allow digits, spaces, dots, and plus
-          const parts = exprStr.split('+').map(part => parseFloat(part.trim()));
-          if (parts.every(p => !isNaN(p))) {
-            const calculatedValue = parts.reduce((sum, p) => sum + p, 0);
+          const parts = exprStr.split('+').map((part: string) => parseFloat(part.trim()));
+          if (parts.every((p: number) => !isNaN(p))) {
+            const calculatedValue = parts.reduce((sum: number, p: number) => sum + p, 0);
             return `"totalEstimatedCost": ${calculatedValue}${trailingChar}`;
           }
         } else if (!isNaN(parseFloat(exprStr))) { // If it's already a single number
@@ -167,98 +203,279 @@ const generateMockPlan = (demand: UserDemand, taskId: string): TravelPlan => {
   };
 };
 
+// 导入 example.json 内容
+const loadExampleData = async () => {
+  try {
+    const response = await fetch('/example.json');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('无法加载 example.json:', error);
+    return null;
+  }
+};
+
+// 转换 example.json 格式为 TravelPlan 格式
+const convertExampleDataToPlan = async (exampleData: any, demand: UserDemand, taskId: string): Promise<TravelPlan> => {
+  const dailyPlans: DailyPlan[] = [];
+  
+  // 城市坐标映射（用于提供默认坐标）
+  const cityCoordinates: Record<string, { lat: number; lng: number }> = {
+    '上海': { lat: 31.2304, lng: 121.4737 },
+    '杭州': { lat: 30.2741, lng: 120.1551 },
+    '北京': { lat: 39.9042, lng: 116.4074 },
+    '广州': { lat: 23.1291, lng: 113.2644 },
+    '深圳': { lat: 22.5431, lng: 114.0579 },
+    '南京': { lat: 32.0603, lng: 118.7969 },
+    '苏州': { lat: 31.2989, lng: 120.5853 },
+    '成都': { lat: 30.5728, lng: 104.0668 },
+    '西安': { lat: 34.3416, lng: 108.9398 },
+    '重庆': { lat: 29.5630, lng: 106.5516 }
+  };
+
+  // 获取目标城市的基础坐标
+  const targetCityCoords = cityCoordinates[exampleData.target_city || demand.destination] || 
+                          cityCoordinates['杭州']; // 默认使用杭州坐标
+  
+  if (exampleData.itinerary && exampleData.itinerary.length > 0) {
+    // 使用 for...of 循环来支持异步操作
+    for (const dayData of exampleData.itinerary) {
+      const dailyPlan: DailyPlan = {
+        day: dayData.day,
+        summary: `第 ${dayData.day} 天的行程`,
+        activities: [],
+        dailyCost: 0
+      };
+
+      let dailyCost = 0;
+      
+      if (dayData.activities && Array.isArray(dayData.activities)) {
+        // 为了支持异步地理编码，我们需要使用 Promise.all
+        const processedActivities = await Promise.all(
+          dayData.activities.map(async (activity: any, index: number) => {
+            // 确定活动类型，处理火车等特殊情况
+            let activityType = activity.type || 'other';
+            if (activity.TrainID || (activity.start && activity.end && !activity.position)) {
+              activityType = 'train';
+            }
+
+            // 初始化坐标（默认使用目标城市坐标）
+            let activityLat = targetCityCoords.lat;
+            let activityLng = targetCityCoords.lng;
+
+            // 尝试获取真实坐标
+            if (activity.position) {
+              const cleanName = extractLocationName(activity.position);
+              const geocodingResult = await geocodeAddress(cleanName);
+              
+              if (geocodingResult && isValidCoordinate(geocodingResult.longitude, geocodingResult.latitude)) {
+                activityLat = geocodingResult.latitude;
+                activityLng = geocodingResult.longitude;
+                console.log(`获取到真实坐标: ${activity.position} -> (${activityLng}, ${activityLat})`);
+              } else {
+                // 如果无法获取真实坐标，使用目标城市周围随机分布
+                const randomOffsetLat = (Math.random() - 0.5) * 0.05; // 约5公里范围
+                const randomOffsetLng = (Math.random() - 0.5) * 0.05;
+                activityLat = targetCityCoords.lat + randomOffsetLat;
+                activityLng = targetCityCoords.lng + randomOffsetLng;
+                console.warn(`无法获取真实坐标，使用随机坐标: ${activity.position}`);
+              }
+              
+              // 添加延迟避免API限流
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            const convertedActivity: Activity = {
+              id: `${taskId}_${dayData.day}_${index}`,
+              position: activity.position || (activity.start && activity.end ? `${activity.start} → ${activity.end}` : '未知地点'),
+              type: activityType as Activity['type'],
+              startTime: activity.start_time,
+              endTime: activity.end_time,
+              start_time: activity.start_time, // 保留原格式
+              end_time: activity.end_time, // 保留原格式
+              cost: activity.cost || 0,
+              pictureUrl: `https://picsum.photos/seed/${encodeURIComponent(activity.position || activity.start || 'activity')}${dayData.day}${index}/300/200`,
+              latitude: activityLat,
+              longitude: activityLng,
+              // 保存pose字段，如果通过API获取了有效坐标
+              ...(isValidCoordinate(activityLng, activityLat) && {
+                pose: {
+                  latitude: activityLat,
+                  longitude: activityLng
+                }
+              }),
+              tickets: activity.tickets
+            };
+
+            // 处理火车信息
+            if (activity.TrainID) {
+              convertedActivity.TrainID = activity.TrainID;
+              convertedActivity.start = activity.start;
+              convertedActivity.end = activity.end;
+              
+              // 尝试获取火车站的真实坐标
+              if (activity.start) {
+                const stationGeocodingResult = await geocodeAddress(activity.start + '火车站');
+                if (stationGeocodingResult && isValidCoordinate(stationGeocodingResult.longitude, stationGeocodingResult.latitude)) {
+                  convertedActivity.latitude = stationGeocodingResult.latitude;
+                  convertedActivity.longitude = stationGeocodingResult.longitude;
+                  // 保存pose字段
+                  convertedActivity.pose = {
+                    latitude: stationGeocodingResult.latitude,
+                    longitude: stationGeocodingResult.longitude
+                  };
+                } else {
+                  // 火车站通常在城市中心附近
+                  convertedActivity.latitude = targetCityCoords.lat + (Math.random() - 0.5) * 0.02;
+                  convertedActivity.longitude = targetCityCoords.lng + (Math.random() - 0.5) * 0.02;
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+              }
+            }
+
+            // 处理交通信息
+            if (activity.transports && Array.isArray(activity.transports)) {
+              convertedActivity.transports = activity.transports.map((transport: any) => ({
+                mode: transport.mode,
+                start: transport.start,
+                end: transport.end,
+                duration: transport.end_time && transport.start_time ? 
+                  `${Math.round((new Date(`1970-01-01T${transport.end_time}:00`).getTime() - new Date(`1970-01-01T${transport.start_time}:00`).getTime()) / 60000)}分钟` : 
+                  undefined,
+                cost: transport.cost,
+                distance: transport.distance,
+                start_time: transport.start_time,
+                end_time: transport.end_time,
+                tickets: transport.tickets
+              }));
+              
+              // 累加交通费用到活动费用中
+              const transportCost = activity.transports.reduce((sum: number, t: any) => sum + (t.cost || 0), 0);
+              convertedActivity.cost = (convertedActivity.cost || 0) + transportCost;
+            }
+
+            return convertedActivity;
+          })
+        );
+
+        // 添加处理过的活动到每日计划
+        processedActivities.forEach(convertedActivity => {
+          dailyCost += convertedActivity.cost || 0;
+          dailyPlan.activities.push(convertedActivity);
+        });
+      }
+
+      dailyPlan.dailyCost = dailyCost;
+      dailyPlans.push(dailyPlan);
+    }
+  }
+
+  // 生成POI数据
+  const pois: POIDetail[] = [];
+  dailyPlans.forEach(day => {
+    day.activities.forEach(activity => {
+      if (activity.type === 'attraction' && activity.latitude && activity.longitude) {
+        const poi: POIDetail = {
+          name: activity.position,
+          latitude: activity.latitude,
+          longitude: activity.longitude
+        };
+        
+        // 如果活动有pose字段，也添加到POI中
+        if (activity.pose) {
+          poi.pose = activity.pose;
+        }
+        
+        pois.push(poi);
+      }
+    });
+  });
+
+  return {
+    taskId,
+    title: `从${exampleData.start_city || demand.startCity}到${exampleData.target_city || demand.destination}的旅程`,
+    startCity: exampleData.start_city || demand.startCity,
+    destination: exampleData.target_city || demand.destination,
+    durationDays: dailyPlans.length,
+    numberOfPeople: exampleData.people_number || parseInt(demand.people.split(' ')[0] || "1"),
+    budget: parseFloat(demand.budget.split(' ')[0] || "0"),
+    currency: "CNY",
+    dailyPlans,
+    totalEstimatedCost: dailyPlans.reduce((sum, dp) => sum + (dp.dailyCost || 0), 0),
+    pois
+  };
+};
+
 export const getPlanningResult = async (taskId: string): Promise<{ success: boolean; plan?: TravelPlan; error?: string }> => {
-  const demand = planningRequests[taskId];
+  // 首先检查是否已有缓存的完成计划
+  if (completedPlans[taskId]) {
+    return { success: true, plan: completedPlans[taskId] };
+  }
+  
+  // 检查内存中的请求
+  let demand = planningRequests[taskId];
+  
+  // 如果内存中没有，尝试从localStorage恢复
+  if (!demand && typeof window !== 'undefined') {
+    try {
+      const savedRequests = JSON.parse(localStorage.getItem('planningRequests') || '{}');
+      demand = savedRequests[taskId];
+      if (demand) {
+        planningRequests[taskId] = demand; // 恢复到内存中
+      }
+    } catch (e) {
+      console.warn('无法从localStorage恢复数据:', e);
+    }
+  }
+  
   if (!demand) {
     return { success: false, error: "无效的任务ID或任务已过期。" };
   }
 
-  if (!ai) {
-    console.warn("Gemini AI客户端未初始化。返回模拟计划。");
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const mockPlan = generateMockPlan(demand, taskId);
-    return { success: true, plan: mockPlan };
-  }
+  // 直接返回 example.json 内容
+  console.log("直接返回 example.json 内容");
+  await new Promise(resolve => setTimeout(resolve, 1000)); // 模拟加载时间
   
-  const prompt = `
-    You are an expert travel planner AI. Generate a personalized travel itinerary based on the following user request.
-    User Request:
-    - Start City: ${demand.startCity}
-    - Destination: ${demand.destination}
-    - Duration: ${demand.duration}
-    - Number of People: ${demand.people}
-    - Budget: ${demand.budget || '未指定'}
-    - Additional Requirements (natural language input): "${demand.rawInput || '未指定'}"
-
-    Please provide the output as a single, valid JSON object. Do not include any explanatory text before or after the JSON.
-    The JSON structure should be:
-    {
-      "title": "Descriptive title for the trip (e.g., '3-Day Beijing to Paris Culinary Adventure')",
-      "startCity": "${demand.startCity}",
-      "destination": "${demand.destination}",
-      "durationDays": ${parseInt(demand.duration.split(' ')[0] || "1")},
-      "numberOfPeople": ${parseInt(demand.people.split(' ')[0] || "1")},
-      "budget": ${parseFloat(demand.budget.split(' ')[0] || "0")},
-      "currency": "USD", // Or infer from budget if possible, e.g., CNY, EUR. Default to USD if unsure.
-      "intercityTransportStart": { "mode": "Train/Flight/Car", "from": "${demand.startCity}", "to": "${demand.destination}", "duration": "Xh Ym", "cost": N, "departureTime": "HH:MM", "arrivalTime": "HH:MM", "details": "Flight XYZ / Train ABC" }, // Optional but recommended
-      "dailyPlans": [
-        {
-          "day": 1,
-          "summary": "Brief summary for Day 1, mentioning activities and flow.",
-          "activities": [
-            {
-              "id": "unique_activity_id_1_1",
-              "position": "Name of Place/Activity 1",
-              "type": "attraction/dining/accommodation/travel/other",
-              "startTime": "HH:MM",
-              "endTime": "HH:MM",
-              "cost": N, // Estimated cost in specified currency
-              "pictureUrl": "https://picsum.photos/seed/UNIQUE_ACTIVITY_NAME_DAY1_1/300/200", // Use picsum.photos as placeholder, ensure UNIQUE_ACTIVITY_NAME is URL friendly
-              "notes": "Brief notes about the activity, what makes it interesting, tips.",
-              "latitude": 0.0, // Approximate latitude
-              "longitude": 0.0, // Approximate longitude
-              "transportTo": { "mode": "Subway/Bus/Taxi/Walk", "from": "Previous Activity/Hotel", "to": "Current Activity", "duration": "Xm", "cost": N, "details": "Line X / Bus Y" }, // Optional
-              "foodInfo": { "name": "Restaurant Name", "type": "Cuisine Type", "estimatedCost": N, "notes": "Specialty dishes, reservation info..." }, // if type is dining
-              "accommodationInfo": { "name": "Hotel Name", "type": "Hotel/Hostel", "cost": N } // if type is accommodation
-            }
-            // ... More activities for Day 1
-          ],
-          "dailyCost": N // Estimated total cost for Day 1
-        }
-        // ... More daily plans
-      ],
-      "intercityTransportEnd": { "mode": "Train/Flight/Car", "from": "${demand.destination}", "to": "${demand.startCity}", "duration": "Xh Ym", "cost": N, "departureTime": "HH:MM", "arrivalTime": "HH:MM", "details": "Flight XYZ / Train ABC" }, // Optional, for return trip
-      "pois": [ { "name": "Key POI Name 1", "latitude": 0.0, "longitude": 0.0 }, { "name": "Key POI Name 2", "latitude": 0.0, "longitude": 0.0 } ], // List of key points of interest with coordinates
-      "totalEstimatedCost": N, // Total estimated cost for the trip (sum of daily costs and intercity transport)
-      "notes": "Optional. Any important overall notes for the user, like budget considerations, visa requirements, general tips for the destination. If the budget is tight, mention it here."
-    }
-
-    // Ensure all fields are plausibly filled. For pictureUrl, use "https://picsum.photos/seed/UNIQUE_NAME/300/200" format, where UNIQUE_NAME is derived from activity name and is URL-encoded.
-    // Generate a realistic and engaging itinerary. If a budget is specified, try to stay within it.
-    // Prioritize activities mentioned in additional requirements.
-    // Ensure latitude and longitude are plausible for the destination.
-    // The "totalEstimatedCost" should be a single number.
-    `;
-
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: GEMINI_TEXT_MODEL,
-      contents: prompt,
-      config: { responseMimeType: "application/json" } 
-    });
-
-    const plan = parseGeminiResponseToTravelPlan(response.text, demand, taskId);
-    if (plan) {
-      return { success: true, plan };
-    } else {
-      return { success: false, error: "无法解析生成的计划。AI可能返回了意外的格式。" };
+    const exampleData = await loadExampleData();
+    if (!exampleData) {
+      throw new Error('无法加载示例数据');
     }
-  } catch (error: any) {
-    console.error("Error calling Gemini API:", error);
-    if (error.message && error.message.includes('permission')) {
-         return { success: false, error: `Gemini API 权限错误：可能是API密钥无效或计费未设置。 (${error.message})` };
+    
+    const plan = await convertExampleDataToPlan(exampleData, demand, taskId);
+    
+    // 缓存生成的计划
+    completedPlans[taskId] = plan;
+    
+    // 同时保存到localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const savedPlans = JSON.parse(localStorage.getItem('completedPlans') || '{}');
+        savedPlans[taskId] = plan;
+        localStorage.setItem('completedPlans', JSON.stringify(savedPlans));
+      } catch (e) {
+        console.warn('无法保存计划到localStorage:', e);
+      }
     }
-    return { success: false, error: `Gemini API 错误：${error.message || '未知错误'}` };
+    
+    return { success: true, plan };
+  } catch (error) {
+    console.error('处理示例数据时出错:', error);
+    // 如果加载示例数据失败，回退到模拟计划
+    const mockPlan = generateMockPlan(demand, taskId);
+    completedPlans[taskId] = mockPlan;
+    
+    if (typeof window !== 'undefined') {
+      try {
+        const savedPlans = JSON.parse(localStorage.getItem('completedPlans') || '{}');
+        savedPlans[taskId] = mockPlan;
+        localStorage.setItem('completedPlans', JSON.stringify(savedPlans));
+      } catch (e) {
+        console.warn('无法保存计划到localStorage:', e);
+      }
+    }
+    
+    return { success: true, plan: mockPlan };
   }
 };
 
@@ -275,7 +492,7 @@ export const modifyExistingPlan = async (
 
   if (!ai) {
     console.warn("Gemini AI客户端未初始化。返回略微修改的模拟计划。");
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 10));
     const modifiedMockPlan = { ...currentPlan };
     if (modifiedMockPlan.dailyPlans.length > 0 && modifiedMockPlan.dailyPlans[0].activities.length > 0) {
       modifiedMockPlan.dailyPlans[0].activities[0].notes = `已修改：${modificationRequest}。${modifiedMockPlan.dailyPlans[0].activities[0].notes || ''}`;
@@ -337,7 +554,7 @@ export const modifyExistingPlan = async (
         startCity: currentPlan.startCity || originalDemand.startCity,
     };
 
-    const plan = parseGeminiResponseToTravelPlan(response.text, baseDemandForParsing, taskId); 
+    const plan = parseGeminiResponseToTravelPlan(response.text || '', baseDemandForParsing, taskId); 
     if (plan) {
       return { success: true, plan: { ...plan, taskId: currentPlan.taskId } }; 
     } else {

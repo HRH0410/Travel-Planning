@@ -3,17 +3,27 @@ export interface POIDetail {
   name: string;
   latitude: number;
   longitude: number;
+  pose?: { // 已保存的坐标信息
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface TransportDetail {
-  mode: string; // e.g., 'Flight', 'Train', 'Car', 'Subway', 'Walk'
-  from: string;
-  to: string;
+  mode: string; // e.g., 'flight', 'train', 'car', 'subway', 'walk', 'metro'
+  start?: string; // 起点
+  end?: string; // 终点
+  from?: string; // 向后兼容
+  to?: string; // 向后兼容
   duration?: string; // e.g., '2h 30m'
   cost?: number;
-  departureTime?: string;
-  arrivalTime?: string;
+  distance?: number; // 距离（公里）
+  start_time?: string; // 开始时间
+  end_time?: string; // 结束时间
+  departureTime?: string; // 向后兼容
+  arrivalTime?: string; // 向后兼容
   details?: string; // e.g., 'Flight AA123' or 'Subway Line 2'
+  tickets?: number; // 票数
 }
 
 export interface FoodInfo {
@@ -25,19 +35,30 @@ export interface FoodInfo {
 }
 
 export interface Activity {
-  id: string; // Unique ID for the activity
+  id?: string; // Unique ID for the activity
   position: string; // Name of the place, e.g., "Eiffel Tower"
-  type: 'attraction' | 'dining' | 'accommodation' | 'travel' | 'other';
-  startTime: string; // e.g., "09:00"
-  endTime: string; // e.g., "11:00"
+  type: 'attraction' | 'dining' | 'accommodation' | 'travel' | 'other' | 'lunch' | 'dinner' | 'train';
+  startTime?: string; // e.g., "09:00"
+  endTime?: string; // e.g., "11:00"
+  start_time?: string; // 兼容新格式
+  end_time?: string; // 兼容新格式
+  start?: string; // 火车起点
+  end?: string; // 火车终点
   cost?: number;
   pictureUrl?: string; // Placeholder like https://picsum.photos/300/200
   notes?: string;
   transportTo?: TransportDetail; // Transport to this activity
+  transports?: TransportDetail[]; // 支持多段交通
   foodInfo?: FoodInfo; // If the activity is dining
   accommodationInfo?: { name: string; type?: string; cost?: number; };
   latitude?: number;
   longitude?: number;
+  pose?: { // 已保存的坐标信息
+    latitude: number;
+    longitude: number;
+  };
+  TrainID?: string; // 火车班次
+  tickets?: number; // 票数
 }
 
 export interface DailyPlan {
