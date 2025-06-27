@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { TravelPlan, Activity, DailyPlan, POIDetail } from '../types';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { TravelPlan, Activity, DailyPlan } from '../types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { LoadingSpinner, SkeletonLoader } from './ui/LoadingSpinner';
@@ -16,6 +16,8 @@ interface ItineraryViewProps {
   setActiveDay: (day: number) => void;
   hideTransport: boolean;
   setHideTransport: (hide: boolean) => void;
+  selectedActivityId?: string | null;
+  onActivityClick?: (activityId: string | null) => void;
 }
 
 const getActivityEmoji = (activity: Activity): string => {
@@ -122,7 +124,7 @@ const TransportChain: React.FC<TransportChainProps> = ({ activity, displayCurren
   };
 
   return (
-    <div className="relative mb-4 flex">
+    <div className="relative mb-2 flex">
       <div className="flex items-start relative w-full min-h-full">
         {/* 左侧连接线和图标 */}
         <div className="flex flex-col items-center mr-4 flex-shrink-0 relative" style={{ minHeight: '100%' }}>
@@ -136,7 +138,7 @@ const TransportChain: React.FC<TransportChainProps> = ({ activity, displayCurren
         </div>
         
         {/* 右侧气泡框 */}
-        <div className="flex-1 bg-white rounded-lg shadow-md border border-gray-200 p-3 relative">
+        <div className="flex-1 bg-white rounded-lg border border-gray-200 p-3 relative">
           {/* 指向图标的小箭头 - 对准圆形图标中心 */}
           <div className="absolute left-[-8px] top-[24px] w-0 h-0 border-t-[8px] border-b-[8px] border-r-[8px] border-transparent border-r-gray-200"></div>
           <div className="absolute left-[-7px] top-[24px] w-0 h-0 border-t-[7px] border-b-[7px] border-r-[7px] border-transparent border-r-white"></div>
@@ -322,9 +324,19 @@ interface TravelTimelineProps {
   activities: Activity[];
   displayCurrency: string;
   hideTransport?: boolean;
+  selectedActivityId?: string | null;
+  onActivityClick?: (activityId: string | null) => void;
 }
 
-const TravelTimeline: React.FC<TravelTimelineProps> = ({ activities, displayCurrency, hideTransport = false }) => {
+const TravelTimeline: React.FC<TravelTimelineProps> = ({ 
+  activities, 
+  displayCurrency, 
+  hideTransport = false,
+  selectedActivityId,
+  onActivityClick
+}) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
   // 添加调试信息
   console.log('所有活动:', activities.map((act, idx) => ({
     index: idx,
@@ -344,7 +356,10 @@ const TravelTimeline: React.FC<TravelTimelineProps> = ({ activities, displayCurr
   console.log('是否有通勤数据:', hasAnyTravel);
   
   return (
-    <div className="space-y-0">
+    <div className="space-y-0" style={isMobile ? {
+      WebkitOverflowScrolling: 'touch',
+      overscrollBehavior: 'contain'
+    } : {}}>
       {activities.map((activity, index) => {
         const isTravel = activity.type === 'travel' || activity.type === 'train';
         const isStartEnd = isStartOrEndTravel(activities, index);
@@ -370,22 +385,47 @@ const TravelTimeline: React.FC<TravelTimelineProps> = ({ activities, displayCurr
             {/* 景点/活动卡片 */}
             {!isTravel && (
               <div 
-                className="flex items-center gap-3 sm:gap-4 bg-white rounded-lg shadow-sm p-2 sm:p-3 transition-all duration-200 hover:ring-2 hover:ring-blue-200 mb-2 relative z-10"
+                className={`flex items-center gap-3 sm:gap-4 rounded-lg shadow-sm p-3 sm:p-3 transition-all duration-200 mb-2 relative z-10 cursor-pointer border-2 ${
+                  selectedActivityId === (activity.position || `activity-${index}`)
+                    ? 'bg-blue-50 border-blue-400' // 选中状态样式
+                    : 'bg-white border-transparent hover:ring-2 hover:ring-blue-200 active:bg-gray-50' // 默认、悬停和点击样式
+                } ${isMobile ? 'min-h-[80px] p-4' : ''}`} // 移动端增加最小高度和内边距
                 data-activity={activity.position || `activity-${index}`}
+                onClick={() => {
+                  const activityId = activity.position || `activity-${index}`;
+                  if (onActivityClick) {
+                    // 切换选中状态：如果已选中则取消选中，否则选中
+                    onActivityClick(selectedActivityId === activityId ? null : activityId);
+                  }
+                }}
+                style={{
+                  // 移动端添加触摸优化
+                  WebkitTapHighlightColor: 'transparent',
+                  WebkitTouchCallout: 'none',
+                  userSelect: 'none'
+                }}
               >
                 {activity.pictureUrl && (
-                  <img src={activity.pictureUrl} alt={activity.position} className="rounded-lg object-cover h-14 w-14 sm:h-16 sm:w-16 flex-shrink-0" />
+                  <img 
+                    src={activity.pictureUrl} 
+                    alt={activity.position} 
+                    className={`rounded-lg object-cover flex-shrink-0 ${
+                      isMobile 
+                        ? 'h-16 w-16 sm:h-18 sm:w-18' // 移动端稍大一些
+                        : 'h-14 w-14 sm:h-16 sm:w-16'
+                    }`} 
+                  />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xl">{getActivityEmoji(activity)}</span>
-                    <span className="text-xs sm:text-sm font-medium text-gray-500">{formatActivityTime(activity)}</span>
+                  <div className={`flex items-center gap-2 mb-0.5 ${isMobile ? 'mb-1' : ''}`}>
+                    <span className={`${isMobile ? 'text-xl' : 'text-xl'}`}>{getActivityEmoji(activity)}</span>
+                    <span className={`font-medium text-gray-500 ${isMobile ? 'text-sm' : 'text-xs sm:text-sm'}`}>{formatActivityTime(activity)}</span>
                   </div>
-                  <div className="font-semibold text-gray-800 text-sm sm:text-base mb-0.5 truncate">
+                  <div className={`font-semibold text-gray-800 mb-0.5 truncate ${isMobile ? 'text-base mb-1' : 'text-sm sm:text-base mb-0.5'}`}>
                     {activity.position || '未知位置'}
                   </div>
-                  {activity.notes && <div className="text-xs sm:text-sm text-gray-600 truncate">{activity.notes}</div>}
-                  {activity.cost && activity.cost > 0 && <div className="text-xs sm:text-sm font-medium text-green-600">花费：{activity.cost} {displayCurrency}</div>}
+                  {activity.notes && <div className={`text-gray-600 truncate ${isMobile ? 'text-sm mb-1' : 'text-xs sm:text-sm'}`}>{activity.notes}</div>}
+                  {activity.cost && activity.cost > 0 && <div className={`font-medium text-green-600 ${isMobile ? 'text-sm' : 'text-xs sm:text-sm'}`}>花费：{activity.cost} {displayCurrency}</div>}
                 </div>
               </div>
             )}
@@ -564,9 +604,12 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({
   activeDay, 
   setActiveDay,
   hideTransport,
-  setHideTransport
+  setHideTransport,
+  selectedActivityId,
+  onActivityClick
 }) => {
   const displayCurrency = currency || '元';
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   useEffect(() => {
     if (dailyPlans && dailyPlans.length > 0 && !dailyPlans.find(dp => dp.day === activeDay)) {
@@ -585,15 +628,15 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({
   const currentDayPlan = dailyPlans.find(dp => dp.day === activeDay);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-100 flex items-center gap-2 flex-wrap flex-shrink-0">
+    <div className={`${isMobile ? 'flex flex-col' : 'h-full flex flex-col'}`}>
+      <div className={`p-4 border-b border-gray-100 flex items-center gap-2 flex-wrap flex-shrink-0 ${isMobile ? 'gap-3 p-4' : ''}`}>
         {dailyPlans.map(dp => (
           <Button
             key={dp.day}
             variant={dp.day === activeDay ? 'primary' : 'ghost'}
-            size="sm"
+            size={isMobile ? "md" : "sm"} // 移动端使用更大的按钮
             onClick={() => setActiveDay(dp.day)}
-            className="whitespace-nowrap"
+            className={`whitespace-nowrap ${isMobile ? 'min-h-[44px] px-4' : ''}`} // 移动端符合44px触摸目标
           >
             第 {dp.day} 天
           </Button>
@@ -601,9 +644,9 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({
         <div className="flex-1"></div>
         <Button 
           variant="ghost" 
-          size="sm" 
+          size={isMobile ? "md" : "sm"}
           onClick={() => setHideTransport(!hideTransport)}
-          className="flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+          className={`flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${isMobile ? 'min-h-[44px] px-3' : ''}`}
           title={hideTransport ? "显示通勤" : "隐藏通勤"}
         >
           {hideTransport ? (
@@ -618,9 +661,9 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({
         </Button>
         <Button 
           variant="ghost" 
-          size="sm" 
+          size={isMobile ? "md" : "sm"}
           onClick={onShowGlobalModal}
-          className="flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100"
+          className={`flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 ${isMobile ? 'min-h-[44px] px-3' : ''}`}
           title="修改行程"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -628,12 +671,14 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({
           </svg>
         </Button>
       </div>
-      <div className="flex-1 p-2 sm:p-4 bg-gray-50 rounded-b-lg overflow-y-auto min-h-0">
+      <div className={`p-2 sm:p-4 bg-gray-50 rounded-b-lg ${isMobile ? '' : 'flex-1 overflow-y-auto min-h-0'}`}>
         {currentDayPlan?.activities && currentDayPlan.activities.length > 0 ? (
           <TravelTimeline 
             activities={currentDayPlan.activities} 
             displayCurrency={displayCurrency}
             hideTransport={hideTransport}
+            selectedActivityId={selectedActivityId}
+            onActivityClick={onActivityClick}
           />
         ) : (
           <p className="text-gray-500 text-center py-4 pb-4">此日无活动安排。</p>
@@ -644,29 +689,30 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({
 };
 
 interface MapViewProps {
-  pois?: POIDetail[];
-  hoveredActivityId: string | null;
-  onActivityHover: (activityId: string | null) => void;
   dailyPlans?: DailyPlan[];
   activeDay?: number;
-  setActiveDay?: (day: number) => void;
+  selectedActivityId?: string | null;
+  onActivityClick?: (activityId: string | null) => void;
 }
 
 const MapView: React.FC<MapViewProps> = ({ 
-  pois, 
-  hoveredActivityId, 
-  onActivityHover,
   dailyPlans,
   activeDay,
-  setActiveDay 
+  selectedActivityId,
+  onActivityClick 
 }) => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const [markers, setMarkers] = useState<Array<{
     longitude: number;
     latitude: number;
     name: string;
     type?: 'attraction' | 'dining' | 'accommodation' | 'travel' | 'other';
+    activityIndex?: number; // 添加景点编号
+    day?: number; // 添加天数信息
   }>>([]);
   const [isLoadingCoordinates, setIsLoadingCoordinates] = useState(false);
+  const [mapZoom, setMapZoom] = useState(13); // 添加缩放状态管理
+  const [isPanelCollapsed, setIsPanelCollapsed] = useState(false); // 地图信息面板折叠状态
   
   // 检查是否有pose字段（已保存的坐标）
   const hasValidPose = (item: any): boolean => {
@@ -704,6 +750,8 @@ const MapView: React.FC<MapViewProps> = ({
     name: string;
     type?: 'attraction' | 'dining' | 'accommodation' | 'travel' | 'other';
     hasPose?: boolean;
+    activityIndex?: number;
+    day?: number;
   }>) => {
     if (initialMarkers.length === 0) return initialMarkers;
     
@@ -788,8 +836,19 @@ const MapView: React.FC<MapViewProps> = ({
     return fixedMarkers;
   };
 
+  // 用于追踪 dailyPlans 内容变化的 ref
+  const dailyPlansContentRef = useRef<string>('');
+  
   // 初始化标记点
   useEffect(() => {
+    // 检查 dailyPlans 的内容是否真的发生了变化（而不仅仅是引用变化）
+    const currentContent = JSON.stringify(dailyPlans);
+    if (currentContent === dailyPlansContentRef.current && markers.length > 0) {
+      // 如果内容没有变化且已有标记，不重新初始化
+      return;
+    }
+    dailyPlansContentRef.current = currentContent;
+    
     const initializeMarkers = async () => {
       const initialMarkers: Array<{
         longitude: number;
@@ -797,34 +856,46 @@ const MapView: React.FC<MapViewProps> = ({
         name: string;
         type?: 'attraction' | 'dining' | 'accommodation' | 'travel' | 'other';
         hasPose?: boolean;
+        activityIndex?: number;
+        day?: number;
       }> = [];
 
-      // 添加POI点
-      if (pois && pois.length > 0) {
-        pois.forEach(poi => {
-          const hasPose = hasValidPose(poi);
-          initialMarkers.push({
-            longitude: hasPose && poi.pose ? poi.pose.longitude : (poi.longitude || 0),
-            latitude: hasPose && poi.pose ? poi.pose.latitude : (poi.latitude || 0),
-            name: poi.name,
-            type: 'attraction',
-            hasPose
-          });
-        });
-      }
-
-      // 添加当日活动点
+      // 只添加当前活动天的标记点
       if (dailyPlans && activeDay) {
         const currentDayPlan = dailyPlans.find(dp => dp.day === activeDay);
         if (currentDayPlan?.activities) {
-          currentDayPlan.activities.forEach(activity => {
+          // 过滤出非交通类活动并添加编号
+          const nonTravelActivities = currentDayPlan.activities.filter(activity => 
+            activity.type !== 'travel' && activity.type !== 'train'
+          );
+          
+          nonTravelActivities.forEach((activity, index) => {
             const hasPose = hasValidPose(activity);
+            let longitude, latitude;
+            
+            if (hasPose && activity.pose) {
+              // 优先使用pose中的坐标
+              longitude = activity.pose.longitude;
+              latitude = activity.pose.latitude;
+            } else if (activity.longitude !== undefined && activity.latitude !== undefined) {
+              // 使用activity自身的坐标，但必须是有效的
+              longitude = activity.longitude;
+              latitude = activity.latitude;
+            } else {
+              // 如果都没有有效坐标，使用NaN标记需要后续修复
+              longitude = NaN;
+              latitude = NaN;
+            }
+            
+            // 只有确保坐标是数字且有效时才创建标记
             initialMarkers.push({
-              longitude: hasPose && activity.pose ? activity.pose.longitude : (activity.longitude || 0),
-              latitude: hasPose && activity.pose ? activity.pose.latitude : (activity.latitude || 0),
-              name: activity.position || '活动位置',
+              longitude,
+              latitude,
+              name: activity.position || `活动${index + 1}`,
               type: getActivityMapType(activity.type),
-              hasPose
+              hasPose,
+              activityIndex: index + 1, // 景点编号
+              day: activeDay
             });
           });
         }
@@ -836,39 +907,97 @@ const MapView: React.FC<MapViewProps> = ({
     };
 
     initializeMarkers();
-  }, [pois, dailyPlans, activeDay]);
+  }, [dailyPlans, activeDay]); // 恢复 dailyPlans 依赖，但通过内容检查避免不必要的重新初始化
 
-  // 计算地图中心点
-  const getMapCenter = () => {
+  // 监听选中状态变化，重新计算地图中心点
+  useEffect(() => {
+    if (selectedActivityId && markers.length > 0) {
+      const selectedMarker = markers.find(marker => marker.name === selectedActivityId);
+      if (selectedMarker && isValidCoordinate(selectedMarker.longitude, selectedMarker.latitude)) {
+        console.log('选中活动变化，重新居中地图:', selectedActivityId);
+      }
+    }
+  }, [selectedActivityId, markers]);
+
+  // 计算地图中心点 - 优先选中的标记点，严格验证
+  // 计算地图中心点 - 优先选中的标记点，严格验证，使用 useMemo 缓存结果
+  const mapCenter = useMemo(() => {
+    console.log('计算地图中心点，总标记数量:', markers.length);
+    
     if (markers.length > 0) {
-      // 过滤掉无效的经纬度数据
-      const validMarkers = markers.filter(marker => 
-        isValidCoordinate(marker.longitude, marker.latitude)
-      );
+      // 过滤掉无效的经纬度数据 - 严格验证
+      const validMarkers = markers.filter(marker => {
+        const isValid = isValidCoordinate(marker.longitude, marker.latitude);
+        if (!isValid) {
+          console.warn('发现无效标记坐标（计算中心点时）:', { 
+            name: marker.name, 
+            lng: marker.longitude, 
+            lat: marker.latitude,
+            'lng类型': typeof marker.longitude,
+            'lat类型': typeof marker.latitude,
+            'lng是否NaN': Number.isNaN(marker.longitude),
+            'lat是否NaN': Number.isNaN(marker.latitude),
+            'lng是否有限': Number.isFinite(marker.longitude),
+            'lat是否有限': Number.isFinite(marker.latitude)
+          });
+        }
+        return isValid;
+      });
+      
+      console.log('有效标记数量:', validMarkers.length, '/', markers.length);
       
       if (validMarkers.length > 0) {
+        // 如果有选中的活动，优先将其作为中心点
+        if (selectedActivityId) {
+          const selectedMarker = validMarkers.find(marker => marker.name === selectedActivityId);
+          if (selectedMarker && isValidCoordinate(selectedMarker.longitude, selectedMarker.latitude)) {
+            console.log('使用选中标记作为地图中心:', selectedMarker.name, 
+              { lng: selectedMarker.longitude, lat: selectedMarker.latitude });
+            return { longitude: selectedMarker.longitude, latitude: selectedMarker.latitude };
+          }
+        }
+        
+        // 否则计算所有标记的平均中心点
         const avgLng = validMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / validMarkers.length;
         const avgLat = validMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / validMarkers.length;
         
+        console.log('计算平均中心点:', { avgLng, avgLat });
+        
         // 确保计算出的中心点是有效的
         if (isValidCoordinate(avgLng, avgLat)) {
+          console.log('✅ 使用平均中心点:', { longitude: avgLng, latitude: avgLat });
           return { longitude: avgLng, latitude: avgLat };
+        } else {
+          console.warn('计算出的平均中心点无效:', { avgLng, avgLat });
         }
       }
     }
+    
+    console.log('使用默认中心点');
     return undefined; // 使用默认中心点
+  }, [markers, selectedActivityId]); // 只依赖 markers 和 selectedActivityId
+
+  // 处理地图中心变化
+  const handleMapCenterChange = (newCenter: { longitude: number; latitude: number }) => {
+    console.log('地图中心变化:', newCenter);
+    // 这里可以根据需要添加额外的逻辑，比如更新URL参数等
   };
 
   const handleMarkerClick = (marker: any) => {
     console.log('标记被点击:', marker.name);
     
-    // 设置悬停状态
-    onActivityHover(marker.name);
+    // 触发点击事件，设置选中状态（如果已选中则取消选中）
+    if (onActivityClick) {
+      const newSelectedId = selectedActivityId === marker.name ? null : marker.name;
+      onActivityClick(newSelectedId);
+      console.log('设置选中活动ID:', newSelectedId);
+    }
     
-    // 查找包含此标记的活动和对应的天数
-    if (dailyPlans) {
-      for (const dayPlan of dailyPlans) {
-        const matchingActivity = dayPlan.activities?.find(activity => {
+    // 查找包含此标记的活动并滚动到对应位置
+    if (dailyPlans && activeDay) {
+      const currentDayPlan = dailyPlans.find(dp => dp.day === activeDay);
+      if (currentDayPlan?.activities) {
+        const matchingActivity = currentDayPlan.activities.find(activity => {
           // 尝试通过多种方式匹配活动
           return activity.position === marker.name ||
                  activity.start === marker.name ||
@@ -877,15 +1006,9 @@ const MapView: React.FC<MapViewProps> = ({
         });
         
         if (matchingActivity) {
-          console.log(`在第${dayPlan.day}天找到匹配的活动:`, matchingActivity.position);
+          console.log(`找到匹配的活动:`, matchingActivity.position);
           
-          // 如果不是当前活动的天数，切换到对应的天数
-          if (dayPlan.day !== activeDay && setActiveDay) {
-            setActiveDay(dayPlan.day);
-            console.log(`切换到第${dayPlan.day}天`);
-          }
-          
-          // 优化滚动逻辑，避免影响外层布局
+          // 滚动到活动元素并居中显示
           setTimeout(() => {
             const activityElement = document.querySelector(`[data-activity="${marker.name}"]`);
             if (activityElement) {
@@ -902,7 +1025,7 @@ const MapView: React.FC<MapViewProps> = ({
               if (scrollContainer) {
                 console.log('找到滚动容器:', scrollContainer);
                 
-                // 在指定容器内滚动
+                // 在指定容器内滚动并居中显示
                 const containerRect = scrollContainer.getBoundingClientRect();
                 const elementRect = activityElement.getBoundingClientRect();
                 
@@ -926,7 +1049,7 @@ const MapView: React.FC<MapViewProps> = ({
                   top: finalScrollTop,
                   behavior: 'smooth'
                 });
-                console.log('在容器内滚动到活动元素', { 
+                console.log('滚动到活动元素并居中', { 
                   relativeTop, 
                   centerOffset, 
                   targetScrollTop, 
@@ -935,12 +1058,12 @@ const MapView: React.FC<MapViewProps> = ({
                   elementHeight
                 });
               } else {
-                console.log('未找到滚动容器，尝试查找父级容器');
+                console.log('未找到滚动容器，使用默认滚动');
                 
-                // 使用更简单的滚动策略，避免影响页面布局
+                // 使用滚动策略将元素居中显示
                 activityElement.scrollIntoView({ 
                   behavior: 'smooth', 
-                  block: 'center', // 尝试居中显示
+                  block: 'center',
                   inline: 'nearest'
                 });
                 console.log('使用默认滚动到活动元素');
@@ -948,18 +1071,27 @@ const MapView: React.FC<MapViewProps> = ({
             } else {
               console.warn(`未找到 data-activity="${marker.name}" 的元素`);
             }
-          }, 200); // 增加等待时间，确保天数切换和DOM更新完成
-          
-          break;
+          }, 100);
         }
       }
     }
   };
 
-  // 过滤有效的标记点
-  const validMarkers = markers.filter(marker => 
-    isValidCoordinate(marker.longitude, marker.latitude)
-  );
+  // 过滤有效的标记点 - 严格过滤，确保不传递任何无效坐标给地图
+  const validMarkers = markers.filter(marker => {
+    const isValid = isValidCoordinate(marker.longitude, marker.latitude);
+    if (!isValid) {
+      console.warn('过滤掉无效标记:', { 
+        name: marker.name, 
+        lng: marker.longitude, 
+        lat: marker.latitude,
+        type: typeof marker.longitude + '/' + typeof marker.latitude
+      });
+    }
+    return isValid;
+  });
+
+  console.log('传递给地图的有效标记数量:', validMarkers.length, '总标记数量:', markers.length);
 
   return (
     <div className="h-full relative">
@@ -974,12 +1106,15 @@ const MapView: React.FC<MapViewProps> = ({
       )}
       
       {/* 只有在有有效标记时才渲染地图 */}
-      {(validMarkers.length > 0 || getMapCenter()) ? (
+      {(validMarkers.length > 0 || mapCenter) ? (
         <AmapComponent
-          center={getMapCenter()}
+          center={mapCenter}
           markers={validMarkers}
-          zoom={validMarkers.length > 1 ? 12 : 14}
+          zoom={mapZoom}
           onMarkerClick={handleMarkerClick}
+          onZoomChange={setMapZoom}
+          onMapCenterChange={handleMapCenterChange}
+          selectedActivityId={selectedActivityId}
           height="100%"
           className="rounded-lg overflow-hidden"
         />
@@ -995,39 +1130,83 @@ const MapView: React.FC<MapViewProps> = ({
         </div>
       )}
       
-      {/* 地图信息面板 */}
-      {validMarkers.length > 0 && (
-        <div className="absolute top-4 left-4 bg-white bg-opacity-90 rounded-lg shadow-lg p-3 max-w-xs">
-          <h4 className="font-semibold text-sm mb-2">地图标记 ({validMarkers.length}个)</h4>
-          <div className="max-h-40 overflow-y-auto space-y-1">
-            {validMarkers.map((marker, index) => (
-              <div 
-                key={`${marker.name}-${index}`}
-                className={`text-xs p-2 rounded cursor-pointer transition-colors ${
-                  hoveredActivityId === marker.name 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'hover:bg-gray-100'
-                }`}
-                onMouseEnter={() => onActivityHover(marker.name)}
-                onMouseLeave={() => onActivityHover(null)}
-                onClick={() => handleMarkerClick(marker)}
+      {/* 地图信息面板 - 只显示当前天的行程，移动端优化 */}
+      {validMarkers.length > 0 && activeDay && (
+        <div className={`absolute ${isMobile ? 'top-2 left-2 right-[100px]' : 'top-4 left-4'} bg-white bg-opacity-90 rounded-lg shadow-lg transition-all duration-300 ${
+          isPanelCollapsed 
+            ? 'p-2 h-auto' 
+            : 'p-3 max-w-xs h-[calc(100%-40px)]'
+        }`}>
+          {/* 面板头部 */}
+          <div className={`flex items-center justify-between ${
+            isPanelCollapsed 
+              ? '' 
+              : 'mb-2'
+          }`}>
+            <h4 className="font-semibold text-sm">
+              第{activeDay}天行程 ({validMarkers.length}个景点)
+            </h4>
+            
+            {/* 折叠/展开按钮 */}
+            <button
+              onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
+              className={`p-1 rounded-md hover:bg-gray-200 transition-colors ${
+                isPanelCollapsed?'ml-1': ''}`
+              }
+              title={isPanelCollapsed ? "展开面板" : "折叠面板"}
+            >
+              <svg 
+                className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${
+                  isPanelCollapsed ? 'rotate-180' : ''
+                }`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: getMarkerColor(marker.type) }}></span>
-                  <span className="font-medium">{marker.name}</span>
-                </div>
-                <div className="text-gray-500 mt-1">{getTypeLabel(marker.type)}</div>
-              </div>
-            ))}
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
+          
+          {/* 面板内容 */}
+          {!isPanelCollapsed && (
+            <div className="overflow-y-auto space-y-1 flex-1" style={{ maxHeight: 'calc(100% - 40px)' }}>
+              {validMarkers
+                .sort((a, b) => (a.activityIndex || 0) - (b.activityIndex || 0)) // 按景点编号排序
+                .map((marker, index) => (
+                <div 
+                  key={`${marker.name}-${marker.activityIndex || index}`}
+                  className={`text-xs p-2 rounded cursor-pointer transition-colors m-[2px] hover:bg-blue-100 hover:text-blue-700 ${
+                    selectedActivityId === marker.name 
+                      ? 'bg-blue-200 text-blue-800' : ''
+                  }`}
+                  onClick={() => handleMarkerClick(marker)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
+                      style={{ backgroundColor: getMarkerColor(marker.type) }}
+                    >
+                      {marker.activityIndex || index + 1}
+                    </span>
+                    <span className="font-medium">{marker.name}</span>
+                  </div>
+                  <div className="text-gray-500 mt-1">{getTypeLabel(marker.type)}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* 高亮显示信息 */}
-      {hoveredActivityId && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-xl p-3">
-          <p className="text-sm font-semibold text-blue-600">高亮显示：{hoveredActivityId}</p>
-          <p className="text-xs text-gray-500">点击标记查看详情</p>
+      {/* 高亮显示信息 - 当有选中活动时固定显示 */}
+      {(selectedActivityId) && (
+        <div className={`absolute bottom-4 left-1/2 transform -translate-x-1/2 rounded-lg shadow-xl p-3 transition-colors ${
+          selectedActivityId ? 'bg-blue-600 text-white' : 'bg-white text-blue-600'
+        }`}>
+          <p className="text-sm font-semibold">
+            {selectedActivityId}
+          </p>
         </div>
       )}
     </div>
@@ -1086,7 +1265,7 @@ interface PlanningPageProps {
 }
 
 export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, error, onModifyPlan, isModifying }) => {
-  const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(null);
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [leftWidth, setLeftWidth] = useState(380); // px, 默认左侧宽度
   const [showGlobalModal, setShowGlobalModal] = useState(false);
   const [globalInput, setGlobalInput] = useState('');
@@ -1096,6 +1275,13 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
   const [hideTransport, setHideTransport] = useState(false);
   const [updatedPlan, setUpdatedPlan] = useState<TravelPlan | null>(null);
   const [isUpdatingCoordinates, setIsUpdatingCoordinates] = useState(false);
+
+  // 监听 activeDay 变化，自动取消选中状态
+  useEffect(() => {
+    if (selectedActivityId) {
+      setSelectedActivityId(null);
+    }
+  }, [activeDay]);
 
   // 自动更新计划坐标
   useEffect(() => {
@@ -1189,8 +1375,14 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
   const totalCost = currentPlan.totalEstimatedCost || currentPlan.dailyPlans.reduce((sum, dp) => sum + (dp.dailyCost || 0), 0);
   // 响应式：小屏直接堆叠，大屏可拖动
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
   return (
-    <div className="h-screen flex flex-col bg-gray-100 p-4 md:p-6 lg:p-8 overflow-hidden">
+    <div className={`${isMobile ? 'min-h-screen overflow-y-auto' : 'h-screen overflow-hidden'} flex flex-col bg-gray-100 p-4 md:p-6 lg:p-8`} 
+         style={isMobile ? {
+           WebkitOverflowScrolling: 'touch', // iOS 平滑滚动
+           overscrollBehavior: 'contain', // 防止过度滚动
+         } : {}}>
       <header className="mb-6 text-center md:text-left flex-shrink-0">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
           {currentPlan.title || `${currentPlan.destination}之旅`}
@@ -1207,18 +1399,21 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
           </p>
         )}
       </header>
-      <div className="flex-1 w-full flex flex-col lg:flex-row relative min-h-0 pb-6">
+      <div className={`${isMobile ? 'flex flex-col space-y-6' : 'flex-1 w-full flex flex-col lg:flex-row relative min-h-0 pb-6'}`}>
         {/* 左侧：行程 */}
         {!isLeftCollapsed && (
           <div
-            className="bg-white rounded-xl shadow-xl flex flex-col relative min-h-0 mb-4"
+            className={`bg-white rounded-xl shadow-xl flex flex-col relative ${isMobile ? 'order-1 overflow-y-auto' : 'min-h-0 mb-4'}`}
             style={isDesktop ? { 
               width: isRightCollapsed ? '100%' : leftWidth, 
               maxWidth: isRightCollapsed ? '100%' : leftWidth, 
               transition: 'width 0.15s'
+            } : isMobile ? {
+              width: '100%',
+              height: '70vh'
             } : { 
               width: '100%',
-              height: '45%', // 在移动端占稍小的高度
+              height: '45%',
               marginBottom: '1rem'
             }}
           >
@@ -1260,6 +1455,8 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
               setActiveDay={setActiveDay}
               hideTransport={hideTransport}
               setHideTransport={setHideTransport}
+              selectedActivityId={selectedActivityId}
+              onActivityClick={setSelectedActivityId}
             />
           </div>
         )}
@@ -1279,8 +1476,8 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
         )}
         {/* 右侧：地图 */}
         {!isRightCollapsed && (
-          <div className="flex-1 flex flex-col min-w-0 min-h-0">
-            <div className="flex-1 bg-white rounded-xl shadow-xl relative min-h-0 mb-4">
+          <div className={`${isMobile ? 'order-2' : 'flex-1 flex flex-col min-w-0 min-h-0'}`}>
+            <div className={`${isMobile ? 'h-[80vh] w-full' : 'flex-1'} bg-white rounded-xl shadow-xl relative ${isMobile ? '' : 'min-h-0 mb-4'}`}>
               {/* 右侧放大按钮 - 放在左上角圆角上 */}
               {isDesktop && (
                 <button
@@ -1305,18 +1502,20 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
                       <path d="M11.71 15.29l2.59-2.59a.996.996 0 0 0 0-1.41L11.71 8.7c-.63-.62-1.71-.18-1.71.71v5.17c0 .9 1.08 1.34 1.71.71z"/>
                     </svg>
                   ) : (
-                    <svg className="w-6 h-6 scale-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none"><path d="M14 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v9a1 1 0 1 0 2 0V6.414l7.293 7.293a1 1 0 0 0 1.414-1.414L6.414 5H13a1 1 0 0 0 1-1zm10.5 1A2.5 2.5 0 0 1 27 7.5V16h-7.23A3.77 3.77 0 0 0 16 19.77V27H7.5A2.5 2.5 0 0 1 5 24.5V19a1 1 0 1 0-2 0v5.5A4.5 4.5 0 0 0 7.5 29h17a4.5 4.5 0 0 0 4.5-4.5v-17A4.5 4.5 0 0 0 24.5 3H19a1 1 0 1 0 0 2h5.5z" fill="currentColor"></path></g></svg>
+                    <svg className="w-6 h-6 scale-90" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+                      <g fill="none">
+                        <path d="M14 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v9a1 1 0 1 0 2 0V6.414l7.293 7.293a1 1 0 0 0 1.414-1.414L6.414 5H13a1 1 0 0 0 1-1zm10.5 1A2.5 2.5 0 0 1 27 7.5V16h-7.23A3.77 3.77 0 0 0 16 19.77V27H7.5A2.5 2.5 0 0 1 5 24.5V19a1 1 0 1 0-2 0v5.5A4.5 4.5 0 0 0 7.5 29h17a4.5 4.5 0 0 0 4.5-4.5v-17A4.5 4.5 0 0 0 24.5 3H19a1 1 0 1 0 0 2h5.5z" fill="currentColor"></path>
+                      </g>
+                    </svg>
                   )}
                 </button>
               )}
               
               <MapView
-                pois={currentPlan.pois}
-                hoveredActivityId={hoveredActivityId}
-                onActivityHover={setHoveredActivityId}
                 dailyPlans={currentPlan.dailyPlans}
                 activeDay={activeDay}
-                setActiveDay={setActiveDay}
+                selectedActivityId={selectedActivityId}
+                onActivityClick={setSelectedActivityId}
               />
             </div>
           </div>

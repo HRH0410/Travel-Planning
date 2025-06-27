@@ -7,6 +7,7 @@ interface MapPoint {
   latitude: number;
   name: string;
   type?: 'attraction' | 'dining' | 'accommodation' | 'travel' | 'other';
+  activityIndex?: number; // 添加景点编号
 }
 
 interface AmapComponentProps {
@@ -15,8 +16,10 @@ interface AmapComponentProps {
   zoom?: number;
   onMarkerClick?: (marker: MapPoint) => void;
   onMapCenterChange?: (center: { longitude: number; latitude: number }) => void;
+  onZoomChange?: (zoom: number) => void;
   height?: string;
   className?: string;
+  selectedActivityId?: string | null; // 新增：选中的活动ID
 }
 
 // 错误边界组件
@@ -60,201 +63,150 @@ const getMarkerIcon = (type?: string) => {
   return colorMap[type || 'other'] || colorMap.other;
 };
 
-// 原生高德地图组件
+// 高德地图组件 - 支持标记点显示
 const NativeAmapComponent: React.FC<AmapComponentProps> = ({
   center = DEFAULT_MAP_CENTER,
   markers = [],
   zoom = 13,
   onMarkerClick,
-  onMapCenterChange,
+  selectedActivityId,
   height = '500px',
   className = ''
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
+  const mapReadyRef = useRef<boolean>(false);
   const markersRef = useRef<any[]>([]);
-  const mapReadyRef = useRef<boolean>(false); // 追踪地图是否完全加载
 
-  // 验证并修复坐标
-  const validateCoordinate = (coord: number, fallback: number): number => {
-    return (isNaN(coord) || !isFinite(coord)) ? fallback : coord;
-  };
-
-  // 点击标记时重新居中地图
-  const handleMarkerClick = (marker: MapPoint) => {
-    console.log('标记被点击:', marker.name);
-    
-    if (mapInstanceRef.current && mapReadyRef.current) {
-      const lng = marker.longitude;
-      const lat = marker.latitude;
-      
-      console.log('点击标记的原始坐标:', { lng, lat });
-      
-      // 严格验证坐标
-      if (typeof lng === 'number' && typeof lat === 'number' &&
-          !isNaN(lng) && !isNaN(lat) &&
-          isFinite(lng) && isFinite(lat) &&
-          lng >= -180 && lng <= 180 &&
-          lat >= -90 && lat <= 90) {
-        
+  // 清理所有标记点
+  const clearMarkers = () => {
+    if (markersRef.current.length > 0) {
+      markersRef.current.forEach(marker => {
         try {
-          // 平滑移动到点击的标记，不改变缩放级别
-          mapInstanceRef.current.panTo([lng, lat]);
-          console.log(`地图平滑移动到: [${lng}, ${lat}]`);
-          
-          // 触发地图中心变化回调
-          if (onMapCenterChange) {
-            onMapCenterChange({ longitude: lng, latitude: lat });
+          if (mapInstanceRef.current && marker) {
+            mapInstanceRef.current.remove(marker);
           }
         } catch (error) {
-          console.error('移动地图中心失败:', error);
+          console.warn('清理标记点时出错:', error);
         }
-      } else {
-        console.warn('标记坐标无效，无法居中地图:', { lng, lat });
-      }
-    } else {
-      console.warn('地图未准备好，无法处理标记点击');
+      });
+      markersRef.current = [];
     }
+  };
+
+  // 创建标记点图标
+  const createMarkerIcon = (type: string, index: number, isSelected: boolean) => {
+    const color = getMarkerIcon(type);
     
-    // 触发标记点击回调（不延迟，避免状态不同步）
-    if (onMarkerClick) {
-      onMarkerClick(marker);
-    }
-  };
-
-  // 清理现有标记
-  const clearMarkers = () => {
-    if (markersRef.current.length > 0 && mapInstanceRef.current) {
-      console.log(`准备清理 ${markersRef.current.length} 个标记点`);
-      
-      try {
-        // 尝试批量移除标记
-        mapInstanceRef.current.remove(markersRef.current);
-        console.log('✅ 成功批量清理标记点');
-      } catch (error) {
-        console.warn('批量清理标记点时出错:', error);
-        // 如果批量清理失败，尝试逐个清理
-        let successCount = 0;
-        markersRef.current.forEach((marker, index) => {
-          try {
-            if (marker && typeof marker.remove === 'function') {
-              marker.remove();
-              successCount++;
-            } else if (mapInstanceRef.current && marker) {
-              mapInstanceRef.current.remove(marker);
-              successCount++;
-            }
-          } catch (err) {
-            console.warn(`清理标记点 ${index} 失败:`, err);
-          }
-        });
-        console.log(`✅ 逐个清理完成，成功清理 ${successCount}/${markersRef.current.length} 个标记点`);
-      } finally {
-        // 无论如何都要清空引用数组
-        markersRef.current = [];
-      }
+    if (isSelected) {
+      // 选中状态：路标形状，镂空白色中心，彩色边框和文字
+      return new (window as any).AMap.Icon({
+        imageSize: new (window as any).AMap.Size(40, 52),
+        anchor: new (window as any).AMap.Pixel(20, 50), // 锚点在路标底部尖端
+        image: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+          <svg width="40" height="52" viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
+            <!-- 外层路标形状，增加顶部间距 -->
+            <path d="M20 46s16-11 16-24c0-8.8-7.2-16-16-16S4 13.2 4 22c0 13 16 24 16 24z" 
+                  fill="${color}" stroke="#ffffff" stroke-width="2"/>
+            <!-- 内层白色圆形镂空 -->
+            <circle cx="20" cy="22" r="11" fill="white" stroke="${color}" stroke-width="2"/>
+            <!-- 文字 -->
+            <text x="20" y="26" text-anchor="middle" font-family="Arial, sans-serif" 
+                  font-size="13" font-weight="bold" fill="${color}">${index}</text>
+          </svg>
+        `)}`
+      });
     } else {
-      console.log('无标记点需要清理');
+      // 未选中状态：圆形，彩色底色，白色文字
+      return new (window as any).AMap.Icon({
+        imageSize: new (window as any).AMap.Size(32, 32),
+        anchor: new (window as any).AMap.Pixel(16, 16), // 锚点在圆心
+        image: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+          <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <!-- 圆形背景 -->
+            <circle cx="16" cy="16" r="15" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+            <!-- 文字 -->
+            <text x="16" y="20" text-anchor="middle" font-family="Arial, sans-serif" 
+                  font-size="12" font-weight="bold" fill="white">${index}</text>
+          </svg>
+        `)}`
+      });
     }
   };
 
-  // 添加标记点
-  const addMarkers = () => {
-    if (!mapInstanceRef.current || markers.length === 0) {
-      console.log('地图未初始化或无标记点，跳过添加标记');
+  // 更新标记点
+  const updateMarkers = () => {
+    if (!mapInstanceRef.current || !mapReadyRef.current) {
+      console.log('地图未准备好，跳过标记点更新');
       return;
     }
 
+    // 清理现有标记点
     clearMarkers();
 
-    console.log(`准备添加 ${markers.length} 个标记点`);
+    // 过滤有效的标记点
+    const validMarkers = markers.filter(marker => 
+      marker && 
+      typeof marker.longitude === 'number' && 
+      typeof marker.latitude === 'number' &&
+      !isNaN(marker.longitude) && 
+      !isNaN(marker.latitude) &&
+      isFinite(marker.longitude) && 
+      isFinite(marker.latitude) &&
+      marker.longitude >= -180 && marker.longitude <= 180 &&
+      marker.latitude >= -90 && marker.latitude <= 90
+    );
 
-    // 先验证所有标记点的坐标
-    const validatedMarkers = markers.map((marker, index) => {
-      const validLng = validateCoordinate(marker.longitude, DEFAULT_MAP_CENTER.longitude);
-      const validLat = validateCoordinate(marker.latitude, DEFAULT_MAP_CENTER.latitude);
-      
-      const isOriginalValid = !isNaN(marker.longitude) && !isNaN(marker.latitude) && 
-                             isFinite(marker.longitude) && isFinite(marker.latitude);
-      
-      console.log(`标记点 ${index + 1}: ${marker.name} 原始坐标[${marker.longitude}, ${marker.latitude}] ${isOriginalValid ? '✓' : '✗'} 修正后[${validLng}, ${validLat}]`);
-      
-      return {
-        ...marker,
-        validLng,
-        validLat,
-        isValid: isOriginalValid
-      };
-    });
+    console.log(`更新标记点: ${validMarkers.length}/${markers.length}个有效标记`);
 
-    const newMarkers = validatedMarkers.map((marker, index) => {
+    // 添加新的标记点
+    validMarkers.forEach((markerData, index) => {
       try {
-        const markerInstance = new (window as any).AMap.Marker({
-          position: [marker.validLng, marker.validLat],
-          title: marker.name,
-          icon: new (window as any).AMap.Icon({
-            size: new (window as any).AMap.Size(32, 32),
-            image: `data:image/svg+xml;base64,${btoa(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                <circle cx="16" cy="16" r="12" fill="${getMarkerIcon(marker.type)}" stroke="white" stroke-width="2"/>
-                <text x="16" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">${index + 1}</text>
-              </svg>
-            `)}`,
-            imageSize: new (window as any).AMap.Size(32, 32)
-          })
+        const markerIndex = markerData.activityIndex || (index + 1);
+        
+        const marker = new (window as any).AMap.Marker({
+          position: new (window as any).AMap.LngLat(markerData.longitude, markerData.latitude),
+          icon: createMarkerIcon(markerData.type || 'other', markerIndex, false), // 初始状态为未选中
+          title: markerData.name,
+          clickable: true,
+          zIndex: 100 // 默认层级
         });
 
         // 添加点击事件
-        markerInstance.on('click', () => handleMarkerClick(marker));
-
-        console.log(`✅ 标记点 ${index + 1} 创建成功`);
-        return markerInstance;
-      } catch (error) {
-        console.error(`❌ 创建标记点 ${index + 1} 失败:`, error);
-        return null;
-      }
-    }).filter(Boolean); // 过滤掉创建失败的标记
-
-    if (newMarkers.length > 0) {
-      try {
-        markersRef.current = newMarkers;
-        mapInstanceRef.current.add(newMarkers);
-        console.log(`✅ 成功添加 ${newMarkers.length} 个标记点到地图`);
-      } catch (error) {
-        console.error('❌ 添加标记点到地图失败:', error);
-        return;
-      }
-    }
-
-    // 自适应地图视野
-    const trueValidMarkers = validatedMarkers.filter(m => m.isValid);
-
-    if (trueValidMarkers.length > 1) {
-      try {
-        const bounds = new (window as any).AMap.Bounds();
-        trueValidMarkers.forEach(marker => {
-          bounds.extend([marker.validLng, marker.validLat]);
+        marker.on('click', () => {
+          if (onMarkerClick) {
+            onMarkerClick(markerData);
+          }
+          
+          // 点击后将该景点设置为地图中心，使用平滑动画
+          if (mapInstanceRef.current) {
+            try {
+              const newCenter = new (window as any).AMap.LngLat(markerData.longitude, markerData.latitude);
+              mapInstanceRef.current.panTo(newCenter, 400, 'ease-in-out');
+              console.log(`✅ 地图中心已设置为: ${markerData.name} (${markerData.longitude}, ${markerData.latitude})`);
+            } catch (error) {
+              console.warn('设置地图中心失败:', error);
+            }
+          }
         });
+
+        // 将标记点添加到地图
+        mapInstanceRef.current.add(marker);
+        markersRef.current.push(marker);
         
-        console.log('设置地图边界以包含所有标记点');
-        mapInstanceRef.current.setBounds(bounds, false, [60, 60, 60, 60]);
+        console.log(`✅ 添加标记点: ${markerData.name} at (${markerData.longitude}, ${markerData.latitude})`);
       } catch (error) {
-        console.error('设置地图边界时出错:', error);
+        console.warn(`创建标记点失败: ${markerData.name}`, error);
       }
-    } else if (trueValidMarkers.length === 1) {
-      const marker = trueValidMarkers[0];
-      try {
-        mapInstanceRef.current.setZoomAndCenter(15, [marker.validLng, marker.validLat]);
-        console.log(`地图居中到唯一标记点: [${marker.validLng}, ${marker.validLat}]`);
-      } catch (error) {
-        console.error('设置地图中心时出错:', error);
-      }
-    }
+    });
+
+    console.log(`✅ 标记点更新完成，共${markersRef.current.length}个标记点`);
   };
 
   // 初始化地图（只在首次加载时）
   useEffect(() => {
     let mapInstance: any = null;
+    let originalConsoleError: typeof console.error | null = null;
 
     const initMap = async () => {
       if (!mapRef.current || mapInstanceRef.current) {
@@ -291,7 +243,14 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
         const AMap = await AMapLoader.load({
           key: AMAP_CONFIG.KEY,
           version: AMAP_CONFIG.VERSION,
-          plugins: ['AMap.Scale', 'AMap.ControlBar'],
+          plugins: [
+            'AMap.IndoorMap',        // 室内地图插件
+            'AMap.Buildings',        // 3D建筑插件
+            'AMap.ControlBar',       // 3D控制条插件
+            'AMap.Scale',            // 比例尺插件
+            'AMap.ToolBar',          // 工具条插件
+            'AMap.CitySearch'        // 城市搜索插件
+          ],
           ...(AMAP_CONFIG.SECURITY_JS_CODE && {
             securityJSCode: AMAP_CONFIG.SECURITY_JS_CODE
           })
@@ -318,10 +277,10 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
 
         console.log('初始化地图中心点:', validCenter);
 
-        // 验证缩放级别
+        // 验证缩放级别 - 3D建筑在较高缩放级别(14+)下更明显
         const validZoom = (typeof zoom === 'number' && !isNaN(zoom) && isFinite(zoom) && zoom >= 3 && zoom <= 20) 
-          ? zoom 
-          : 13;
+          ? Math.max(zoom, 14)  // 确保最小缩放级别为14，以便显示3D建筑
+          : 15;  // 默认使用15级缩放，这个级别下3D建筑效果最佳
 
         console.log('初始化缩放级别:', validZoom);
 
@@ -334,68 +293,185 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
         mapInstance = new AMap.Map(mapRef.current, {
           center: validCenter,
           zoom: validZoom,
-          viewMode: '3D',
+          viewMode: '3D',              // 启用3D视图模式
           resizeEnable: true,
           dragEnable: true,
           zoomEnable: true,
           doubleClickZoom: true,
           keyboardEnable: true,
-          scrollWheel: true
+          scrollWheel: true,
+          touchZoom: true,
+          touchZoomCenter: 1,
+          jogEnable: true,
+          animateEnable: true,
+          pitchEnable: true,           // 启用倾斜功能，支持3D视角
+          rotateEnable: true,          // 启用旋转功能，支持3D视角
+          pitch: 45,                   // 设置初始倾斜角度（0-83度），45度更容易看到3D效果
+          rotation: 0,                 // 设置初始旋转角度
+          mapStyle: 'amap://styles/normal',  // 使用标准地图样式，更好支持3D建筑
+          features: ['bg', 'point', 'road', 'building'], // 确保包含building特性
+          expandZoomRange: true,
+          zooms: [3, 20],
+          showBuildingBlock: true,     // 显示3D楼块
+          showLabel: true,             // 显示地图标注
+          showIndoorMap: false,        // 关闭室内地图，避免与3D建筑冲突
+          building3d: true,            // 启用3D建筑（关键配置）
+          buildingAnimation: true,     // 启用建筑动画
+          skyColor: '#87CEEB',         // 设置天空颜色，增强3D效果
+          terrain: false,              // 关闭地形，专注于建筑3D效果
+          layers: [                    // 明确指定图层
+            new AMap.TileLayer({
+              getTileUrl: function(x: number, y: number, z: number) {
+                return `https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x=${x}&y=${y}&z=${z}`;
+              },
+              zIndex: 1
+            })
+          ]
         });
 
         mapInstanceRef.current = mapInstance;
 
-        // 监听地图加载完成
+        // 添加全局错误处理，防止地图内部错误影响页面
+        originalConsoleError = console.error;
+        const handleMapError = (...args: any[]) => {
+          const errorMessage = args[0]?.toString() || '';
+          // 如果是地图相关的 LngLat 错误，降级为警告
+          if (errorMessage.includes('Invalid Object: LngLat') || 
+              errorMessage.includes('LngLat(NaN, NaN)')) {
+            console.warn('地图坐标警告（已处理）:', ...args);
+            return;
+          }
+          // 其他错误正常输出
+          if (originalConsoleError) {
+            originalConsoleError(...args);
+          }
+        };
+        
+        // 临时替换 console.error
+        console.error = handleMapError;        // 监听地图加载完成
         mapInstance.on('complete', () => {
           console.log('✅ 地图加载完成');
-          mapReadyRef.current = true; // 标记地图已完全加载
+          mapReadyRef.current = true;
           
-          // 强制刷新地图尺寸（防止容器大小问题）
-          setTimeout(() => {
-            if (mapInstanceRef.current && mapRef.current && mapReadyRef.current) {
-              const width = mapRef.current.offsetWidth;
-              const height = mapRef.current.offsetHeight;
-              
-              console.log('地图完成后容器尺寸:', { width, height });
-              
-              if (width > 0 && height > 0 && 
-                  !isNaN(width) && !isNaN(height) &&
-                  isFinite(width) && isFinite(height)) {
-                try {
-                  if (mapInstanceRef.current.getStatus && 
-                      mapInstanceRef.current.getStatus().dragEnable !== undefined) {
-                    mapInstanceRef.current.getSize();
-                    console.log('地图尺寸刷新完成');
-                  }
-                } catch (error) {
-                  console.warn('刷新地图尺寸时出错:', error);
-                }
+          // 强制启用3D建筑显示
+          try {
+            // 确保3D建筑图层可见
+            mapInstance.getCity((info: any) => {
+              console.log('当前城市:', info);
+              // 强制刷新建筑图层
+              mapInstance.setFeatures(['bg', 'point', 'road', 'building']);
+              mapInstance.refresh();
+            });
+          } catch (error) {
+            console.warn('获取城市信息失败:', error);
+          }
+          
+          // 禁用浏览器默认的右键菜单和拖拽行为
+          if (mapRef.current) {
+            const mapContainer = mapRef.current;
+            
+            // 阻止右键菜单
+            mapContainer.addEventListener('contextmenu', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            });
+            
+            // 阻止默认的拖拽行为
+            mapContainer.addEventListener('dragstart', (e) => {
+              e.preventDefault();
+            });
+            
+            // 阻止选择文本
+            mapContainer.addEventListener('selectstart', (e) => {
+              e.preventDefault();
+            });
+            
+            // 确保鼠标事件能正确传递
+            mapContainer.style.userSelect = 'none';
+            mapContainer.style.webkitUserSelect = 'none';
+            (mapContainer.style as any).mozUserSelect = 'none';
+            (mapContainer.style as any).msUserSelect = 'none';
+            
+            console.log('✅ 地图交互事件处理设置完成');
+          }
+          
+          // 添加3D控制条
+          try {
+            const controlBar = new (window as any).AMap.ControlBar({
+              position: {
+                top: '10px',
+                right: '10px'
+              },
+              showControlButton: true,  // 显示控制按钮
+              showZoomBar: true,        // 显示缩放条
+              showDirectionButton: true // 显示方向按钮
+            });
+            mapInstance.addControl(controlBar);
+            console.log('✅ 3D控制条添加成功');
+          } catch (error) {
+            console.warn('添加3D控制条失败:', error);
+          }
+          
+          // 添加工具条
+          try {
+            const toolbar = new (window as any).AMap.ToolBar({
+              position: {
+                top: '110px',
+                right: '10px'
+              },
+              offset: new (window as any).AMap.Pixel(0, 0),
+              locate: true,             // 显示定位按钮
+              direction: true,          // 显示方向按钮
+              autoPosition: false,      // 关闭自动定位
+              locationMarker: true,     // 显示定位标记
+              useNative: false          // 不使用原生定位
+            });
+            mapInstance.addControl(toolbar);
+            console.log('✅ 工具条添加成功');
+          } catch (error) {
+            console.warn('添加工具条失败:', error);
+          }
+          
+          // 添加比例尺
+          try {
+            const scale = new (window as any).AMap.Scale({
+              position: {
+                bottom: '10px',
+                left: '10px'
               }
-            }
-          }, 100);
-        });
-
-        // 监听地图错误
-        mapInstance.on('error', (error: any) => {
-          console.error('❌ 地图加载错误:', error);
-        });
-
-        // 添加控件
-        try {
-          if (AMap.ControlBar) {
-            mapInstance.addControl(new AMap.ControlBar({
-              position: { right: '10px', bottom: '10px' }
-            }));
+            });
+            mapInstance.addControl(scale);
+            console.log('✅ 比例尺添加成功');
+          } catch (error) {
+            console.warn('添加比例尺失败:', error);
           }
           
-          if (AMap.Scale) {
-            mapInstance.addControl(new AMap.Scale({
-              position: { left: '10px', bottom: '10px' }
-            }));
-          }
-        } catch (error) {
-          console.warn('地图控件加载失败:', error);
-        }
+          // 延迟设置视角，确保3D建筑正确加载
+          setTimeout(() => {
+            try {
+              // 设置一个更明显的3D视角
+              mapInstance.setPitch(50);  // 设置倾斜角度
+              mapInstance.setRotation(15); // 稍微旋转增加立体感
+              
+              // 强制重新渲染
+              mapInstance.refresh();
+              console.log('✅ 3D视角设置完成');
+            } catch (error) {
+              console.warn('设置3D视角失败:', error);
+            }
+          }, 1000);
+          
+          // 地图加载完成后立即添加标记点
+          updateMarkers();
+        });
+
+        // 监听地图错误（但不阻止正常操作）
+        mapInstance.on('error', (error: any) => {
+          console.warn('⚠️ 地图运行时警告:', error);
+          // 不重新抛出错误，避免阻止地图操作
+        });
+
+        console.log('地图初始化完成，等待加载完成事件');
 
       } catch (error) {
         console.error('地图初始化失败:', error);
@@ -408,15 +484,16 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
     return () => {
       console.log('开始清理地图组件...');
       
+      // 恢复原始的 console.error
+      if (originalConsoleError) {
+        console.error = originalConsoleError;
+      }
+      
       // 重置状态标志
       mapReadyRef.current = false;
       
       // 清理标记点
-      try {
-        clearMarkers();
-      } catch (error) {
-        console.warn('清理标记点时出错:', error);
-      }
+      clearMarkers();
       
       // 销毁地图实例
       if (mapInstance) {
@@ -453,198 +530,88 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
     };
   }, []); // 只在组件挂载时执行一次
 
-  // 更新地图中心点（不重新初始化地图）
+  // 监听标记点变化
   useEffect(() => {
-    if (mapInstanceRef.current && mapReadyRef.current && center) {
-      // 严格验证中心点坐标
-      const lng = center.longitude;
-      const lat = center.latitude;
-      
-      console.log('原始中心点坐标:', { lng, lat });
-      
-      // 检查坐标是否有效
-      if (typeof lng === 'number' && typeof lat === 'number' &&
-          !isNaN(lng) && !isNaN(lat) &&
-          isFinite(lng) && isFinite(lat) &&
-          lng >= -180 && lng <= 180 &&
-          lat >= -90 && lat <= 90) {
-        
-        const validCenter = [lng, lat];
-        console.log('设置有效的地图中心点:', validCenter);
-        
+    if (mapReadyRef.current) {
+      updateMarkers();
+    }
+  }, [markers]); // 移除 selectedActivityId 依赖，避免选中状态变化时重新创建所有标记
+
+  // 单独处理选中和悬停状态的变化，只更新样式而不重新创建标记
+  useEffect(() => {
+    if (mapReadyRef.current && markersRef.current.length > 0 && markersRef.current.length === markers.length) {
+      markersRef.current.forEach((marker, index) => {
+        const markerData = markers[index];
+        if (markerData) {
+          const isSelected = selectedActivityId === markerData.name;
+          const markerIndex = markerData.activityIndex || (index + 1);
+          try {
+            // 只更新图标，不重新创建标记
+            const newIcon = createMarkerIcon(markerData.type || 'other', markerIndex, isSelected);
+            marker.setIcon(newIcon);
+            marker.setzIndex(isSelected ? 1000 : 100);
+          } catch (error) {
+            console.warn('更新标记样式失败:', error);
+          }
+        }
+      });
+    }
+  }, [selectedActivityId]); // 移除 markers 依赖，避免标记数据变化时重复更新
+
+  // 监听选中活动变化，根据shouldCenterOnSelect决定是否自动居中到选中的景点
+  useEffect(() => {
+    if (mapReadyRef.current && mapInstanceRef.current && selectedActivityId) {
+      // 查找选中的标记点
+      const selectedMarker = markers.find(marker => marker.name === selectedActivityId);
+      if (selectedMarker && 
+          typeof selectedMarker.longitude === 'number' && 
+          typeof selectedMarker.latitude === 'number' &&
+          !isNaN(selectedMarker.longitude) && 
+          !isNaN(selectedMarker.latitude)) {
         try {
-          mapInstanceRef.current.setCenter(validCenter);
+          const newCenter = new (window as any).AMap.LngLat(selectedMarker.longitude, selectedMarker.latitude);
+          mapInstanceRef.current.panTo(newCenter, 400, 'ease-in-out');
+          console.log(`✅ 自动居中到选中景点: ${selectedMarker.name} (${selectedMarker.longitude}, ${selectedMarker.latitude})`);
         } catch (error) {
-          console.error('设置地图中心点失败:', error, '使用的坐标:', validCenter);
+          console.warn('自动居中失败:', error);
         }
-      } else {
-        console.warn('中心点坐标无效，跳过设置:', { lng, lat });
-      }
-    } else {
-      console.log('地图未准备好或中心点为空，跳过中心点更新');
-    }
-  }, [center]);
-
-  // 更新缩放级别（不重新初始化地图）
-  useEffect(() => {
-    if (mapInstanceRef.current && mapReadyRef.current && typeof zoom === 'number') {
-      // 验证缩放级别是否有效
-      if (!isNaN(zoom) && isFinite(zoom) && zoom >= 3 && zoom <= 20) {
-        console.log('更新地图缩放级别:', zoom);
-        try {
-          mapInstanceRef.current.setZoom(zoom);
-        } catch (error) {
-          console.error('设置地图缩放级别失败:', error);
-        }
-      } else {
-        console.warn('缩放级别无效:', zoom);
       }
     }
-  }, [zoom]);
+  }, [selectedActivityId, markers]);
 
-  // 更新标记点（不重新初始化地图）
-  useEffect(() => {
-    if (mapInstanceRef.current && mapReadyRef.current) {
-      console.log('标记更新触发，当前标记数量:', markers.length);
-      
-      // 如果标记数量和内容没有实质性变化，避免重新渲染
-      const currentMarkersSignature = markersRef.current.map(m => 
-        m.getOptions ? `${m.getOptions().position?.join(',')}_${m.getOptions().title}` : 'invalid'
-      ).join('|');
-      
-      const newMarkersSignature = markers.map(m => 
-        `${m.longitude},${m.latitude}_${m.name}`
-      ).join('|');
-      
-      if (currentMarkersSignature === newMarkersSignature && markersRef.current.length > 0) {
-        console.log('标记内容未变化，跳过重新渲染');
-        return;
-      }
-      
-      console.log('标记内容发生变化，重新渲染标记');
-      addMarkers();
-    } else {
-      console.log('地图未准备好，延迟添加标记');
-      // 如果地图还没准备好，等待一段时间后重试
-      const timeout = setTimeout(() => {
-        if (mapInstanceRef.current && mapReadyRef.current) {
-          addMarkers();
-        }
-      }, 500);
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [markers]);
-
-  // 监听容器尺寸变化，调整地图大小（但不重新初始化）
+  // 简化的容器尺寸监听
   useEffect(() => {
     if (!mapRef.current) return;
 
-    const container = mapRef.current;
     let resizeTimeout: NodeJS.Timeout;
-    let resizeObserver: ResizeObserver | null = null;
     
-    try {
-      // 使用 ResizeObserver 监听容器尺寸变化
-      resizeObserver = new ResizeObserver((entries) => {
-        // 清除之前的timeout
-        if (resizeTimeout) {
-          clearTimeout(resizeTimeout);
-        }
-        
-        // 防抖处理，避免频繁调用
-        resizeTimeout = setTimeout(() => {
-          for (const entry of entries) {
-            // 检查目标元素是否仍然在DOM中
-            if (entry.target && entry.target.isConnected &&
-                mapInstanceRef.current && mapRef.current && mapReadyRef.current) {
-              
-              const { width, height } = entry.contentRect;
-              
-              console.log('容器尺寸变化:', { width, height });
-              
-              // 检查尺寸是否有效且地图已经完全初始化
-              if (width > 0 && height > 0 && 
-                  !isNaN(width) && !isNaN(height) &&
-                  isFinite(width) && isFinite(height)) {
-                
-                try {
-                  // 使用更安全的方式调用地图API
-                  if (typeof mapInstanceRef.current.getSize === 'function' && 
-                      mapInstanceRef.current.getStatus && 
-                      mapInstanceRef.current.getStatus().dragEnable !== undefined) {
-                    // 地图已完全初始化，可以安全调用 getSize
-                    mapInstanceRef.current.getSize();
-                    console.log('地图尺寸调整完成');
-                  } else {
-                    console.warn('地图API未完全准备好，跳过尺寸调整');
-                  }
-                } catch (error) {
-                  console.warn('调整地图尺寸时出错:', error);
-                }
-              } else {
-                console.warn('容器尺寸无效，跳过地图尺寸调整');
-              }
-            } else {
-              console.log('目标元素不在DOM中或地图未准备好，跳过尺寸调整');
-            }
-          }
-        }, 150); // 增加防抖延迟
-      });
-
-      resizeObserver.observe(container);
-    } catch (error) {
-      console.warn('创建ResizeObserver失败:', error);
-    }
-
-    // 简化 window resize 监听
-    const handleWindowResize = () => {
+    const handleResize = () => {
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);
       }
       
       resizeTimeout = setTimeout(() => {
         if (mapInstanceRef.current && mapRef.current && mapRef.current.isConnected && mapReadyRef.current) {
-          const width = mapRef.current.offsetWidth;
-          const height = mapRef.current.offsetHeight;
-          
-          if (width > 0 && height > 0 && 
-              !isNaN(width) && !isNaN(height) &&
-              isFinite(width) && isFinite(height)) {
-            
-            try {
-              if (typeof mapInstanceRef.current.getSize === 'function' && 
-                  mapInstanceRef.current.getStatus && 
-                  mapInstanceRef.current.getStatus().dragEnable !== undefined) {
-                mapInstanceRef.current.getSize();
-                console.log('Window resize 地图尺寸调整完成');
-              } else {
-                console.warn('Window resize: 地图API未完全准备好');
-              }
-            } catch (error) {
-              console.warn('Window resize 调整地图尺寸时出错:', error);
+          try {
+            if (typeof mapInstanceRef.current.getSize === 'function') {
+              mapInstanceRef.current.getSize();
+              console.log('地图尺寸调整完成');
             }
+          } catch (error) {
+            console.warn('调整地图尺寸时出错:', error);
           }
-        } else {
-          console.log('Window resize: 地图未准备好或容器不在DOM中，跳过尺寸调整');
         }
       }, 200);
     };
 
-    window.addEventListener('resize', handleWindowResize);
+    // 监听窗口尺寸变化
+    window.addEventListener('resize', handleResize);
 
     return () => {
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);
       }
-      if (resizeObserver) {
-        try {
-          resizeObserver.disconnect();
-        } catch (error) {
-          console.warn('断开ResizeObserver时出错:', error);
-        }
-      }
-      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
@@ -660,6 +627,7 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
         border: '1px solid #ddd',
         minHeight: '300px'
       }}
+      title="💡 3D交互提示：右键拖拽可旋转视角，按住Shift+鼠标拖拽可调整倾斜角度，滚轮缩放可查看3D建筑"
     />
   );
 };

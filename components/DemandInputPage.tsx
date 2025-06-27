@@ -179,8 +179,8 @@ export const DemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand
       ))}
 
       <div className={`w-full max-w-5xl relative z-10 transform transition-all duration-1000 ease-out ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        <header className="text-center mb-10 md:mb-12">
-          <h1 className={`text-4xl sm:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 [text-shadow:0_1px_4px_rgba(100,150,255,0.2)] transition-all duration-700 ease-out ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
+        <header className="text-center mb-10 md:mb-12 pt-4">
+          <h1 className={`text-4xl sm:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400 [text-shadow:0_1px_4px_rgba(100,150,255,0.2)] transition-all duration-700 ease-out py-2 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>
             {APP_NAME}
           </h1>
           <p className={`mt-3 text-md sm:text-lg text-slate-600 transition-all duration-700 ease-out delay-150 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'}`}>

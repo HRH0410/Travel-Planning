@@ -6,6 +6,9 @@ import { APP_NAME } from '../constants';
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // 检查是否是planning页面
+  const isPlanningPage = location.pathname.startsWith('/planning');
 
   // Logo URL
   const logoImageUrl = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1950&q=80";
@@ -47,7 +50,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
       </header> 
       
-      <main className="h-[calc(100vh-4rem)] overflow-hidden"> 
+      <main className="min-h-[calc(100vh-4rem)]"> 
         {children}
       </main>
     </div>

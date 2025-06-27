@@ -14,7 +14,7 @@ export const AMAP_CONFIG = {
   // 请在高德开放平台(https://lbs.amap.com/)申请您的API Key
   KEY: 'f79d4fa116ec74f2dce7aa0239c893a2', // 请替换为您的高德地图API密钥
   SECURITY_JS_CODE: 'b2a334a4e5d696ee8996ca4bf797e241', // 可选：如果使用了安全密钥，请填入
-  VERSION: '2.0',
+  VERSION: '2.1Beta',
   PLUGINS: ['AMap.Scale', 'AMap.ControlBar'] // 高德地图2.0版本的控件
 };
 
