@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { TravelPlan, Activity, DailyPlan } from '../types';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { LoadingSpinner, SkeletonLoader } from './ui/LoadingSpinner';
+import { LoadingSpinner, TravelPlanningLoader } from './ui/LoadingSpinner';
 import { Splitter } from './ui/Splitter';
 import { Modal } from './ui/Modal';
 import { AmapComponent } from './ui/AmapComponent';
@@ -1340,16 +1340,7 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
 
   if (isLoading && !currentPlan) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-100">
-        <LoadingSpinner size="lg" text="正在生成您的个性化行程..." />
-        <p className="mt-4 text-gray-600">我们的AI正在为您打造完美的旅程。这可能需要一点时间。</p>
-        <div className="w-full max-w-3xl mt-8 space-y-4">
-            <SkeletonLoader className="h-10 w-1/3" />
-            <SkeletonLoader className="h-64 w-full" />
-            <SkeletonLoader className="h-8 w-full" />
-            <SkeletonLoader className="h-8 w-3/4" />
-        </div>
-      </div>
+      <TravelPlanningLoader message="正在生成您的个性化行程..." />
     );
   }
 

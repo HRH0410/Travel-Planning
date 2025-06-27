@@ -72,6 +72,469 @@
     .animate-aurora-blob-3 { animation: aurora-blob-3 33s infinite ease-in-out; }
     .animate-aurora-blob-4 { animation: aurora-blob-4 40s infinite ease-in-out; }
 
+    /* 波浪动画 */
+    .waves {
+      position: relative;
+      width: 100%;
+      height: 15vh;
+      margin-bottom: -7px;
+      min-height: 100px;
+      max-height: 150px;
+    }
+    
+    .parallax > use {
+      animation: moveForever 25s cubic-bezier(.55,.5,.45,.5) infinite;
+    }
+    .parallax > use:nth-child(1) {
+      animation-delay: -2s;
+      animation-duration: 7s;
+    }
+    .parallax > use:nth-child(2) {
+      animation-delay: -3s;
+      animation-duration: 10s;
+    }
+    .parallax > use:nth-child(3) {
+      animation-delay: -4s;
+      animation-duration: 13s;
+    }
+    .parallax > use:nth-child(4) {
+      animation-delay: -5s;
+      animation-duration: 20s;
+    }
+    @keyframes moveForever {
+      0% { transform: translate3d(-90px, 0, 0); }
+      100% { transform: translate3d(85px, 0, 0); }
+    }
+
+    /* 文字闪烁和动画 */
+    @keyframes text-shimmer {
+      0% { background-position: -100% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .animate-text-shimmer {
+      background-size: 200% auto;
+      animation: text-shimmer 5s linear infinite;
+    }
+
+    /* 慢速脉冲和漂浮动画 */
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 4s infinite ease-in-out;
+    }
+    .animate-float-slow {
+      animation: float-slow 6s infinite ease-in-out;
+    }
+    @keyframes float-slow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* 滚动动画 */
+    @keyframes scrollX {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-scrollX {
+      animation: scrollX 40s linear infinite;
+    }
+
+    /* 背景网格样式 */
+    .bg-grid-pattern {
+      background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* 慢速的 ping 动画 */
+    @keyframes ping-slow {
+      0% { transform: scale(0.2); opacity: 0; }
+      50% { transform: scale(1); opacity: 0.3; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+    .animate-ping-slow {
+      animation: ping-slow 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    /* 云朵飘动动画 */
+    @keyframes float-cloud-1 {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      25% { transform: translateX(20px) translateY(-5px); }
+      50% { transform: translateX(10px) translateY(5px); }
+      75% { transform: translateX(-15px) translateY(-3px); }
+    }
+    @keyframes float-cloud-2 {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      33% { transform: translateX(-25px) translateY(8px); }
+      66% { transform: translateX(15px) translateY(-10px); }
+    }
+    @keyframes float-cloud-3 {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      50% { transform: translateX(30px) translateY(6px); }
+    }
+    @keyframes float-cloud-4 {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      40% { transform: translateX(-20px) translateY(-8px); }
+      80% { transform: translateX(10px) translateY(4px); }
+    }
+    .animate-float-cloud-1 { animation: float-cloud-1 45s infinite ease-in-out; }
+    .animate-float-cloud-2 { animation: float-cloud-2 50s infinite ease-in-out; }
+    .animate-float-cloud-3 { animation: float-cloud-3 40s infinite ease-in-out; }
+    .animate-float-cloud-4 { animation: float-cloud-4 55s infinite ease-in-out; }
+
+    /* 缓慢旋转动画 */
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 20s linear infinite;
+    }
+
+    /* 缓慢弹跳动画 */
+    @keyframes bounce-slow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .animate-bounce-slow {
+      animation: bounce-slow 4s infinite ease-in-out;
+    }
+
+    /* 滚动动画暂停悬停 */
+    .animate-scrollX:hover {
+      animation-play-state: paused;
+    }
+
+    /* 3D 变换效果 */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-3d {
+      transform-style: preserve-3d;
+    }
+
+    /* 毛玻璃效果增强 */
+    .backdrop-blur-enhanced {
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+    }
+
+    /* 新增动画延迟类 */
+    .animation-delay-1000 {
+      animation-delay: 1s;
+    }
+    .animation-delay-2000 {
+      animation-delay: 2s;
+    }
+    .animation-delay-3000 {
+      animation-delay: 3s;
+    }
+
+    /* 滑动条相关动画 */
+    @keyframes sliderGlow {
+      0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.5); }
+    }
+
+    .slider-glow {
+      animation: sliderGlow 2s ease-in-out infinite;
+    }
+
+    /* 选择卡片动画 */
+    @keyframes cardHover {
+      0% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1.02) translateY(-2px); }
+      100% { transform: scale(1.05) translateY(-4px); }
+    }
+
+    .card-hover:hover {
+      animation: cardHover 0.3s ease-out forwards;
+    }
+
+    /* 浮动输入框标签动画 */
+    @keyframes labelFloat {
+      0% { transform: translateY(16px) scale(1); opacity: 0.7; }
+      100% { transform: translateY(0) scale(0.85); opacity: 1; }
+    }
+
+    .label-float {
+      animation: labelFloat 0.2s ease-out;
+    }
+
+    /* 步骤指示器脉冲动画 */
+    @keyframes stepPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+    }
+
+    .step-pulse {
+      animation: stepPulse 2s infinite;
+    }
+
+    /* 标签云动画 */
+    @keyframes tagBounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    @keyframes tagFadeIn {
+      from { 
+        opacity: 0; 
+        transform: translateY(10px);
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0);
+      }
+    }
+
+    .tag-bounce:hover {
+      animation: tagBounce 0.3s ease-in-out;
+    }
+    
+    /* 标签云淡入动画 */
+    .tag-fade-in {
+      animation: tagFadeIn 0.6s ease-out forwards;
+      opacity: 0;
+      display: inline-flex;
+      align-items: center;
+      vertical-align: top;
+    }
+    
+    .tag-fade-in span {
+      display: inline-flex;
+      align-items: center;
+      vertical-align: baseline;
+    }
+
+    /* 渐变文字动画 */
+    @keyframes gradientText {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .gradient-text-animate {
+      background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+      background-size: 400% 400%;
+      animation: gradientText 4s ease infinite;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 背景粒子动画 */
+    @keyframes particleFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+      33% { transform: translateY(-20px) rotate(120deg); opacity: 0.6; }
+      66% { transform: translateY(-10px) rotate(240deg); opacity: 0.4; }
+    }
+
+    .particle-float {
+      animation: particleFloat 6s ease-in-out infinite;
+    }
+
+    /* 表单容器动画 */
+    @keyframes formSlideIn {
+      0% { transform: translateX(-50px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+
+    .form-slide-in {
+      animation: formSlideIn 0.5s ease-out;
+    }
+
+    /* 按钮波纹效果 */
+    @keyframes buttonRipple {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+
+    .button-ripple {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .button-ripple::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .button-ripple:active::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    /* 工具提示动画 */
+    @keyframes tooltipFadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .tooltip-fade-in {
+      animation: tooltipFadeIn 0.3s ease-out;
+    }
+
+    /* 加载动画 */
+    @keyframes loadingSpinner {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-spinner {
+      animation: loadingSpinner 1s linear infinite;
+    }
+
+    /* 成功检查标记动画 */
+    @keyframes checkMark {
+      0% { stroke-dashoffset: 50; }
+      100% { stroke-dashoffset: 0; }
+    }
+
+    .check-mark {
+      stroke-dasharray: 50;
+      animation: checkMark 0.5s ease-out forwards;
+    }
+
+    /* 错误摇摆动画 */
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .error-shake {
+      animation: errorShake 0.5s ease-in-out;
+    }
+
+    /* 弹性缩放动画 */
+    @keyframes elasticScale {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .elastic-scale {
+      animation: elasticScale 0.6s ease-in-out;
+    }
+
+    /* 响应式utilities */
+    @media (max-width: 768px) {
+      .mobile-padding {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      
+      .mobile-text-sm {
+        font-size: 14px;
+      }
+    }
+
+    /* 暗色模式支持 */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #1a1a1a;
+        color: #ffffff;
+      }
+      
+      .bg-white\/80 {
+        background-color: rgba(31, 41, 55, 0.8) !important;
+      }
+      
+      .text-gray-800 {
+        color: #e5e7eb !important;
+      }
+      
+      .text-gray-600 {
+        color: #9ca3af !important;
+      }
+    }
+
+    /* 自定义滚动条增强 */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      border-radius: 10px;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(45deg, #5a6fd8, #6a4190);
+    }
+
+    /* 玻璃态效果 */
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* 模糊背景效果 */
+    .blur-background {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* 渐变边框动画 */
+    @keyframes gradientBorder {
+      0%, 100% { border-image-source: linear-gradient(45deg, #667eea, #764ba2); }
+      50% { border-image-source: linear-gradient(45deg, #f093fb, #f5576c); }
+    }
+
+    .gradient-border-animate {
+      border: 2px solid;
+      border-image-slice: 1;
+      animation: gradientBorder 3s ease infinite;
+    }
+
+    /* 增强的浮动动画变体 */
+    @keyframes floatSoft {
+      0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+      25% { transform: translateY(-15px) rotate(2deg); opacity: 0.5; }
+      50% { transform: translateY(-8px) rotate(-1deg); opacity: 0.4; }
+      75% { transform: translateY(-20px) rotate(1deg); opacity: 0.45; }
+    }
+
+    .animate-float-soft {
+      animation: floatSoft 12s ease-in-out infinite;
+    }
+
+    /* 渐隐渐现动画 */
+    @keyframes fadeInOut {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.6; }
+    }
+
+    .animate-fade-in-out {
+      animation: fadeInOut 8s ease-in-out infinite;
+    }
+
+    /* 柔和的脉冲动画 */
+    @keyframes softPulse {
+      0%, 100% { opacity: 0.15; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.05); }
+    }
+
+    .animate-soft-pulse {
+      animation: softPulse 6s ease-in-out infinite;
+    }
   </style>
 <script type="importmap">
 {
