@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -46,7 +45,8 @@ export const Input: React.FC<InputProps> = ({
             className={`
               peer w-full px-3 py-4 pt-6 border rounded-xl placeholder-transparent
               focus:outline-none transition-all duration-200
-              ${icon ? 'pl-10' : ''}
+              elder:text-lg elder:px-4 elder:py-5 elder:pt-7
+              ${icon ? 'pl-10 elder:pl-12' : ''}
               ${error ? 
                 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 
                 success ?
@@ -63,10 +63,10 @@ export const Input: React.FC<InputProps> = ({
             htmlFor={id}
             className={`
               absolute transition-all duration-200 pointer-events-none
-              ${icon ? 'left-10' : 'left-3'}
+              ${icon ? 'left-10 elder:left-12' : 'left-3 elder:left-4'}
               ${focused || hasValue ? 
-                'top-1 text-xs transform -translate-y-0.5 px-1 bg-white rounded' : 
-                'top-4 text-sm'
+                'top-1 text-xs transform -translate-y-0.5 px-1 bg-white rounded elder:top-1.5 elder:text-sm' : 
+                'top-4 text-sm elder:top-5 elder:text-base'
               }
               ${error ? 'text-red-500' : 
                 success ? 'text-green-500' : 
@@ -79,16 +79,16 @@ export const Input: React.FC<InputProps> = ({
           </label>
         </div>
         {error && (
-          <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <p className="mt-1 text-sm text-red-600 flex items-center space-x-1 elder:text-base">
+            <svg className="w-4 h-4 elder:w-5 elder:h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
             <span>{error}</span>
           </p>
         )}
         {success && !error && (
-          <p className="mt-1 text-sm text-green-600 flex items-center space-x-1">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <p className="mt-1 text-sm text-green-600 flex items-center space-x-1 elder:text-base">
+            <svg className="w-4 h-4 elder:w-5 elder:h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
             <span>完美！</span>
@@ -123,6 +123,7 @@ export const Input: React.FC<InputProps> = ({
           className={`
             block w-full px-3 py-3 border rounded-xl placeholder-gray-400 
             focus:outline-none transition-all duration-200 backdrop-blur-sm
+            elder:text-lg elder:px-4 elder:py-5
             ${icon ? 'pl-10' : ''}
             ${error ? 
               'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 bg-red-50/50' : 
@@ -136,16 +137,16 @@ export const Input: React.FC<InputProps> = ({
         />
       </div>
       {error && (
-        <p className="mt-2 text-sm text-red-600 flex items-center space-x-1">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <p className="mt-2 text-sm text-red-600 flex items-center space-x-1 elder:text-base">
+          <svg className="w-4 h-4 elder:w-5 elder:h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           <span>{error}</span>
         </p>
       )}
       {success && !error && (
-        <p className="mt-2 text-sm text-green-600 flex items-center space-x-1">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <p className="mt-2 text-sm text-green-600 flex items-center space-x-1 elder:text-base">
+          <svg className="w-4 h-4 elder:w-5 elder:h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
           <span>完美！</span>
@@ -187,6 +188,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
             className={`
               peer w-full px-3 py-4 pt-6 border rounded-xl placeholder-transparent resize-none
               focus:outline-none transition-all duration-200
+              elder:text-lg elder:px-4 elder:py-5 elder:pt-7
               ${error ? 
                 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 
                 success ?
@@ -205,8 +207,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
             className={`
               absolute left-3 transition-all duration-200 pointer-events-none
               ${focused || hasValue ? 
-                'top-1 text-xs transform -translate-y-0.5 px-1 bg-white rounded' : 
-                'top-4 text-sm'
+                'top-1 text-xs transform -translate-y-0.5 px-1 bg-white rounded elder:top-1.5 elder:text-sm' : 
+                'top-4 text-sm elder:top-5 elder:text-base'
               }
               ${error ? 'text-red-500' : 
                 success ? 'text-green-500' : 
@@ -219,8 +221,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
           </label>
         </div>
         {error && (
-          <p className="mt-1 text-sm text-red-600 flex items-center space-x-1">
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <p className="mt-1 text-sm text-red-600 flex items-center space-x-1 elder:text-base">
+            <svg className="w-4 h-4 elder:w-5 elder:h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
             <span>{error}</span>
@@ -243,6 +245,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
         className={`
           block w-full px-3 py-3 border rounded-xl placeholder-gray-400 resize-none
           focus:outline-none transition-all duration-200 backdrop-blur-sm
+          elder:text-lg elder:px-4 elder:py-5
           ${error ? 
             'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 bg-red-50/50' : 
             success ?
@@ -255,8 +258,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
         {...props}
       />
       {error && (
-        <p className="mt-2 text-sm text-red-600 flex items-center space-x-1">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+        <p className="mt-2 text-sm text-red-600 flex items-center space-x-1 elder:text-base">
+          <svg className="w-4 h-4 elder:w-5 elder:h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           <span>{error}</span>

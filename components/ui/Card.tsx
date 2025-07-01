@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 // Extend React.HTMLAttributes<HTMLDivElement> to include all standard div attributes and event handlers
@@ -16,10 +15,10 @@ export const Card: React.FC<CardProps> = ({
   hoverEffect = false, 
   ...props // Capture rest of the props (e.g., onClick, onMouseEnter, onMouseLeave)
 }) => {
-  const hoverStyles = hoverEffect ? 'hover:shadow-xl hover:-translate-y-1 transform transition-all duration-300 ease-in-out' : '';
+  const hoverStyles = hoverEffect ? 'hover:shadow-xl hover:-translate-y-1 transform transition-all duration-300 ease-in-out elder:transform-none elder:hover:shadow-lg' : '';
   return (
     <div
-      className={`bg-white rounded-xl shadow-lg overflow-hidden ${hoverStyles} ${className}`}
+      className={`bg-white rounded-xl shadow-lg overflow-hidden ${hoverStyles} ${className} border border-transparent elder:border-gray-300 elder:shadow-xl`}
       {...props} // Spread the captured props onto the div element
     >
       {children}

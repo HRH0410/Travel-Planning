@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useElderModeContext } from '../ElderModeContext';
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg';
@@ -26,7 +27,8 @@ export const SkeletonLoader: React.FC<{className?: string}> = ({ className }) =>
 };
 
 // 旅行规划专用加载组件
-export const TravelPlanningLoader: React.FC<{ message?: string }> = () => {
+export const TravelPlanningLoader: React.FC<{ message?: string }> = ({ message }) => {
+  const { isElderMode } = useElderModeContext();
   const [progress, setProgress] = React.useState(0);
   const [currentStep, setCurrentStep] = React.useState(0);
   
@@ -59,6 +61,81 @@ export const TravelPlanningLoader: React.FC<{ message?: string }> = () => {
       clearInterval(stepInterval);
     };
   }, []);
+
+  // 关怀模式下的简化加载界面
+  if (isElderMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-8">
+        <div className="text-center max-w-lg mx-auto">
+          {/* 极简大号加载动画 */}
+          <div className="mb-16">
+            <div className="w-32 h-32 mx-auto relative">
+              {/* 大粗进度环 */}
+              <div className="absolute inset-0 rounded-full">
+                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 128 128">
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r="56"
+                    stroke="#e2e8f0"
+                    strokeWidth="12"
+                    fill="none"
+                  />
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r="56"
+                    stroke="#3b82f6"
+                    strokeWidth="12"
+                    fill="none"
+                    strokeDasharray={`${(progress / 100) * 352} 352`}
+                    strokeLinecap="round"
+                    className="transition-all duration-700 ease-out"
+                  />
+                </svg>
+              </div>
+              
+              {/* 中心图标 */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 超大字体提示文字 */}
+          <div className="space-y-12">
+            <h2 className="text-5xl sm:text-6xl font-bold text-gray-800 leading-tight tracking-wide">
+              正在制定<br />
+              旅行方案
+            </h2>
+            
+            <p className="text-3xl text-gray-600 font-semibold">
+              {message || '请稍候片刻'}
+            </p>
+            
+            {/* 大号进度指示 */}
+            <div className="space-y-6">
+              <div className="w-full h-6 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-700 ease-out shadow-sm" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-3xl font-bold text-blue-600">
+                {Math.round(progress)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 普通模式下的原有复杂加载界面（保持不变）
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center relative overflow-hidden">

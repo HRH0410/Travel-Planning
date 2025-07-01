@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -32,13 +31,13 @@ export const Button: React.FC<ButtonProps> = ({
   let sizeStyles = '';
   switch (size) {
     case 'sm':
-      sizeStyles = 'px-3 py-1.5 text-sm';
+      sizeStyles = 'px-3 py-1.5 text-sm elder:px-4 elder:py-2 elder:text-base';
       break;
     case 'md':
-      sizeStyles = 'px-4 py-2 text-base';
+      sizeStyles = 'px-4 py-2 text-base elder:px-6 elder:py-3 elder:text-lg';
       break;
     case 'lg':
-      sizeStyles = 'px-6 py-3 text-lg';
+      sizeStyles = 'px-6 py-3 text-lg elder:px-8 elder:py-4 elder:text-xl';
       break;
   }
 

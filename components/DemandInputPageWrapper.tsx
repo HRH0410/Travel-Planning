@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NewDemandInputPage } from './DemandInputPage';
+import { DemandInputPage } from './DemandInputPage';
 import { UserDemand } from '../types';
 import { startPlanningSession } from '../services/geminiService';
 
@@ -29,7 +29,7 @@ const DemandInputPageWrapper: React.FC = () => {
   }, [navigate]);
 
   return (
-    <NewDemandInputPage 
+    <DemandInputPage 
       onSubmitDemand={handleSubmitDemand} 
       isLoading={isLoading} 
     />

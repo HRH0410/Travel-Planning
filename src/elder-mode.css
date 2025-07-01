@@ -1,0 +1,227 @@
+/* 老人关怀模式专属样式 - 极简优雅版 */
+.elder-mode-background {
+  background: linear-gradient(135deg, #f0f7ff 0%, #f5f8ff 50%, #f0f5ff 100%);
+  position: relative;
+  min-height: 100vh;
+  border: none !important;
+  outline: none !important;
+}
+
+/* 大标题样式 - 超大醒目版 */
+.elder-main-title {
+  font-size: 5.5rem !important;
+  line-height: 1.1 !important;
+  color: #2563eb !important;
+  text-shadow: 0px 5px 10px rgba(37, 99, 235, 0.35) !important;
+  background: none !important;
+  margin-bottom: 1.5rem !important;
+  letter-spacing: -0.02em !important;
+  font-weight: 900 !important;
+  position: relative !important;
+  display: inline-block !important;
+  padding: 0 25px !important;
+  z-index: 1 !important;
+  /* 添加整体浮动动画 */
+  animation: titleFloat 6s ease-in-out infinite alternate;
+}
+
+.elder-main-title::after {
+  content: "";
+  position: absolute;
+  left: -10px;
+  right: -10px;
+  bottom: 0;  /* 再往下移动，靠近文字底部 */
+  height: 22px;
+  background-color: rgba(191, 219, 254, 0.7);
+  z-index: -1;
+  border-radius: 10px;
+}
+
+/* 整体标题浮动动画 */
+@keyframes titleFloat {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-10px);
+  }
+}
+
+/* 移动设备下的标题响应式调整 */
+@media (max-width: 767px) {
+  .elder-main-title {
+    font-size: 4.2rem !important;
+  }
+  
+  .elder-logo-container {
+    width: 160px;
+    height: 160px;
+    margin-bottom: 1rem;
+  }
+  
+  .elder-intro-container p {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .elder-main-title {
+    font-size: 4.25rem !important;
+  }
+}
+
+/* 整合头部内容区域 */
+.elder-header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+  max-width: 800px;
+  width: 100%;
+}
+
+/* Logo 容器美化 - 放大版 */
+.elder-logo-container {
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1.5rem;
+}
+
+/* 关怀模式整体页面调整 */
+body.elder-mode {
+  line-height: 1.6;
+  border: none !important;
+}
+
+/* 按钮容器样式 */
+.elder-button-container {
+  position: relative;
+  padding: 5px;
+  display: inline-block;
+  margin-bottom: 2rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .elder-friendly-icons {
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+  }
+  
+  .elder-icon-item {
+    width: 80%;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 12px;
+  }
+  
+  .elder-icon-item span:first-child {
+    margin-right: 15px;
+  }
+  
+  .elder-main-title {
+    font-size: 2.75rem !important;
+  }
+  
+  .elder-friendly-tip-text {
+    font-size: 1.2rem;
+  }
+  
+  .elder-main-button {
+    font-size: 1.5rem !important;
+    padding: 1.25rem 3rem !important;
+  }
+}
+
+/* 移除所有动画效果 */
+
+/* 介绍文本容器 - 更紧凑 */
+.elder-intro-container {
+  background: rgba(255, 255, 255, 0.85);
+  padding: 22px 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.1);
+  max-width: 85%;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1.5rem;
+}
+
+/* 此部分由上方替换的代码块替代 */
+
+/* 按钮样式 - 醒目友好 */
+.elder-main-button {
+  font-size: 1.75rem !important;
+  padding: 1.5rem 4rem !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3) !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  color: white !important;
+  letter-spacing: 0.02em !important;
+  font-weight: 700 !important;
+  transform: none !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.elder-main-button:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.4) !important;
+}
+
+.elder-button-text {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 移除所有装饰性按钮图标 */
+/* 关怀模式简洁布局调整 */
+.elder-mode .container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .elder-main-title {
+    font-size: 2.75rem !important;
+  }
+  
+  .elder-main-button {
+    font-size: 1.5rem !important;
+    padding: 1.25rem 3rem !important;
+  }
+}
+
+/* 移除关怀模式下的页脚 */
+.elder-mode footer {
+  display: none !important;
+}
+
+/* 确保没有边框 */
+.elder-mode *,
+.elder-mode div,
+.elder-mode button,
+.elder-mode section,
+.elder-mode header,
+.elder-mode main {
+  border: none !important;
+  outline: none !important;
+}
+
+

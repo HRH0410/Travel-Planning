@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老人模式测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to bottom right, #f8fafc, #e0f2fe, #f3e8ff);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .elder-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            border-radius: 50px;
+            z-index: 1000;
+        }
+        
+        .test-content {
+            margin: 30px 0;
+        }
+        
+        .card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 1px solid #e2e8f0;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>智能旅行规划系统</h1>
+        <p>欢迎使用我们的智能旅行规划助手。这里是一个测试页面，用来验证老人友好模式是否正常工作。</p>
+        
+        <div class="test-content">
+            <h2>主要功能</h2>
+            <p>我们的系统可以根据您的需求，智能规划最适合的旅行路线。无论是短途周末游还是长途度假，都能为您提供完美的建议。</p>
+            
+            <div class="card">
+                <h3>个性化推荐</h3>
+                <p>基于您的兴趣爱好和预算，为您推荐最合适的目的地和活动。</p>
+            </div>
+            
+            <div class="card">
+                <h3>智能路线规划</h3>
+                <p>自动优化行程安排，确保您的时间得到最充分的利用。</p>
+            </div>
+        </div>
+        
+        <button onclick="startPlanning()">开始规划旅行</button>
+        <button onclick="showExample()">查看示例</button>
+        
+        <button class="elder-toggle" onclick="toggleElderMode()">
+            <span id="toggle-icon">👵</span>
+            <span id="toggle-text">关怀模式</span>
+        </button>
+    </div>
+
+    <script>
+        let isElderMode = false;
+        
+        function toggleElderMode() {
+            isElderMode = !isElderMode;
+            const icon = document.getElementById('toggle-icon');
+            const text = document.getElementById('toggle-text');
+            
+            if (isElderMode) {
+                // 启用老人模式
+                document.body.style.fontSize = '18px';
+                document.querySelectorAll('h1').forEach(h1 => {
+                    h1.style.fontSize = '2.5rem';
+                    h1.style.fontWeight = 'bold';
+                });
+                document.querySelectorAll('h2').forEach(h2 => {
+                    h2.style.fontSize = '2rem';
+                    h2.style.fontWeight = '600';
+                });
+                document.querySelectorAll('p').forEach(p => {
+                    p.style.fontSize = '1.25rem';
+                    p.style.lineHeight = '1.8';
+                    p.style.color = '#374151';
+                });
+                document.querySelectorAll('button').forEach(btn => {
+                    if (!btn.classList.contains('elder-toggle')) {
+                        btn.style.padding = '16px 32px';
+                        btn.style.fontSize = '1.125rem';
+                        btn.style.minHeight = '50px';
+                    }
+                });
+                
+                icon.textContent = '💝';
+                text.textContent = '退出关怀';
+                
+                // 显示提示
+                showElderModeIndicator();
+                
+            } else {
+                // 退出老人模式
+                document.body.style.fontSize = '';
+                document.querySelectorAll('h1, h2, p, button').forEach(el => {
+                    el.style.fontSize = '';
+                    el.style.fontWeight = '';
+                    el.style.lineHeight = '';
+                    el.style.color = '';
+                    el.style.padding = '';
+                    el.style.minHeight = '';
+                });
+                
+                icon.textContent = '👵';
+                text.textContent = '关怀模式';
+            }
+        }
+        
+        function showElderModeIndicator() {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(59, 130, 246, 0.1);
+                border: 2px solid rgba(59, 130, 246, 0.3);
+                color: #1e40af;
+                padding: 12px 20px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: 500;
+                z-index: 9999;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                animation: slideIn 0.5s ease;
+            `;
+            
+            indicator.innerHTML = '💝 关怀模式已启用';
+            document.body.appendChild(indicator);
+            
+            setTimeout(() => {
+                indicator.style.animation = 'slideOut 0.5s ease forwards';
+                setTimeout(() => indicator.remove(), 500);
+            }, 3000);
+        }
+        
+        function startPlanning() {
+            alert('开始规划功能 - 这是测试页面');
+        }
+        
+        function showExample() {
+            alert('查看示例功能 - 这是测试页面');
+        }
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { opacity: 0; transform: translateX(100%); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+            @keyframes slideOut {
+                from { opacity: 1; transform: translateX(0); }
+                to { opacity: 0; transform: translateX(100%); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
