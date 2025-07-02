@@ -82,12 +82,13 @@ export const Slider: React.FC<SliderProps> = ({
               {icon}
             </div>
           )}
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="text-base font-semibold text-gray-700 dark:text-gray-300">
             {label}
           </label>
         </div>
-        <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${currentColor.bg} text-white text-sm font-medium shadow-lg ${currentColor.shadow} transform transition-all duration-300 ${isDragging ? 'scale-110' : ''}`}>
-          {formatValue ? formatValue(localValue) : `${localValue}${unit}`}
+        <div className={`px-4 py-1.5 rounded-xl bg-gradient-to-r ${currentColor.bg} text-white font-semibold shadow-lg ${currentColor.shadow} transform transition-all duration-300 ${isDragging ? 'scale-105' : ''}`}>
+          <span className="text-base">{formatValue ? formatValue(localValue) : localValue}</span>
+          {unit && <span className="text-sm ml-1">{unit}</span>}
         </div>
       </div>
 

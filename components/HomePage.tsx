@@ -6,12 +6,11 @@ import { AppView } from '../types';
 import logoImage from "../components/Logo.png";
 // 导入目的地图片
 import beijing from '../assets/destinations/beijing.jpg';
-import zhangjiajie from '../assets/destinations/zhangjiajie.jpg';
 import shanghai from '../assets/destinations/shanghai.jpg';
-import lijiang from '../assets/destinations/lijiang.jpg';
-import tibet from '../assets/destinations/tibet.jpg';
-import huangshan from '../assets/destinations/huangshan.jpg';
-import guilin from '../assets/destinations/guilin.jpg';
+import nanjing from '../assets/destinations/nanjing.jpg';
+import chongqing from '../assets/destinations/chongqing.jpg';
+import chengdu from '../assets/destinations/chengdu.jpg';
+import hangzhou from '../assets/destinations/hangzhou.jpg';
 import { useElderModeContext } from './ElderModeContext';
 import '../src/elder-mode.css'; // 导入关怀模式专属样式
 
@@ -269,41 +268,9 @@ const FloatingTravelIcon: React.FC<FloatingIconProps> = ({ IconComponent, style,
 );
 
 
-// --- 旅行统计信息面板 ---
-const TravelStatsPanel: React.FC = () => {
-  const [stats] = useState([
-    { number: "1000+", label: "用户信任", icon: "👥", color: "from-blue-500 to-cyan-500" },
-    { number: "50+", label: "覆盖城市", icon: "🏙️", color: "from-green-500 to-emerald-500" },
-    { number: "100%", label: "满意度", icon: "⭐", color: "from-yellow-500 to-orange-500" },
-    { number: "10/10", label: "智能服务", icon: "🤖", color: "from-purple-500 to-pink-500" }
-  ]);
-
-  return (
-    <div className="w-full max-w-4xl mx-auto my-12 px-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat, index) => (
-          <div
-            key={`stat-${index}`}
-            className="relative group"
-          >
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center border border-white/20 shadow-lg group-hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="text-2xl md:text-3xl mb-2 animate-bounce-slow">{stat.icon}</div>
-              <div className={`text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}>
-                {stat.number}
-              </div>
-              <div className="text-xs md:text-sm text-slate-600 font-medium">{stat.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // --- 滚动目的地卡片 ---
 const ScrollingDestinationPanel: React.FC = () => {
-  // 使用本地图片
+  // 精选6个支持的城市，包含红色旅游
   const destinations = [
     { 
       name: "北京故宫", 
@@ -312,46 +279,34 @@ const ScrollingDestinationPanel: React.FC = () => {
       color: "from-amber-500 to-red-500"
     },
     { 
-      name: "张家界", 
-      imageUrl: zhangjiajie,
-      theme: "奇峰异石",
-      color: "from-green-500 to-emerald-500"
-    },
-    { 
       name: "上海外滩", 
       imageUrl: shanghai,
       theme: "现代都市",
       color: "from-blue-500 to-indigo-500"
     },
     { 
-      name: "云南丽江", 
-      imageUrl: lijiang,
-      theme: "古镇风情",
-      color: "from-orange-500 to-amber-500"
+      name: "南京中山陵", 
+      imageUrl: nanjing,
+      theme: "红色教育",
+      color: "from-red-600 to-rose-600"
     },
     { 
-      name: "西藏布达拉宫", 
-      imageUrl: tibet,
-      theme: "神圣殿堂",
-      color: "from-purple-500 to-pink-500"
-    },
-    { 
-      name: "黄山日出", 
-      imageUrl: huangshan,
-      theme: "云海奇观",
-      color: "from-yellow-500 to-amber-500"
-    },
-    { 
-      name: "桂林山水", 
-      imageUrl: guilin,
-      theme: "山水画卷",
+      name: "杭州西湖", 
+      imageUrl: hangzhou,
+      theme: "湖光山色",
       color: "from-emerald-500 to-teal-500"
     },
     { 
-      name: "九寨沟", 
-      imageUrl: "https://source.unsplash.com/featured/?jiuzhaigou,lake",
-      theme: "彩色湖泊",
-      color: "from-sky-500 to-blue-500"
+      name: "重庆洪崖洞", 
+      imageUrl: chongqing,
+      theme: "山城魅力",
+      color: "from-orange-500 to-red-500"
+    },
+    { 
+      name: "成都宽窄巷子", 
+      imageUrl: chengdu,
+      theme: "休闲之都",
+      color: "from-amber-500 to-orange-500"
     }
   ];
   
@@ -437,12 +392,12 @@ const ScrollingDestinationPanel: React.FC = () => {
 // --- 精选旅行主题 ---
 const InteractiveTravelThemes: React.FC = () => {
   const themes = [
-    { id: 'nature', name: '自然风光', icon: '🏔️', color: 'from-green-400 to-emerald-600', description: '山川湖海，感受大自然的魅力' },
-    { id: 'culture', name: '文化历史', icon: '🏛️', color: 'from-amber-400 to-orange-600', description: '古迹文物，探索历史的足迹' },
-    { id: 'city', name: '都市风情', icon: '🏙️', color: 'from-blue-400 to-indigo-600', description: '繁华都市，体验现代生活' },
-    { id: 'food', name: '美食之旅', icon: '🍜', color: 'from-red-400 to-pink-600', description: '地道美食，品味舌尖上的旅行' },
-    { id: 'adventure', name: '户外探险', icon: '🧗', color: 'from-purple-400 to-violet-600', description: '挑战自我，享受刺激体验' },
-    { id: 'relaxation', name: '休闲度假', icon: '🏖️', color: 'from-cyan-400 to-teal-600', description: '放松身心，享受悠闲时光' }
+    { id: 'nature', name: '拥抱山川湖海', icon: '🏔️', color: 'from-green-400 to-emerald-600', description: '沉浸自然灵境，焕活身心' },
+    { id: 'culture', name: '漫游千年文明', icon: '🏛️', color: 'from-amber-400 to-orange-600', description: '探寻文化遗产，触摸历史温度' },
+    { id: 'red-tourism', name: '传承红色基因', icon: '🚩', color: 'from-red-500 to-rose-600', description: '打卡革命圣地，致敬峥嵘岁月' },
+    { id: 'city', name: '探索都市律动', icon: '🏙️', color: 'from-blue-400 to-indigo-600', description: '解锁现代生活的多彩面貌' },
+    { id: 'food', name: '品味风味人间', icon: '🍜', color: 'from-orange-400 to-pink-600', description: '地道美食地图，满足你的每一口期待' },
+    { id: 'adventure', name: '挑战自然极限', icon: '🧗', color: 'from-purple-400 to-violet-600', description: '踏上热血征途，开启户外冒险之门' }
   ];
 
   return (
@@ -452,9 +407,7 @@ const InteractiveTravelThemes: React.FC = () => {
           精选<span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">旅行主题</span>
         </h3>
         <p className="text-slate-600 max-w-2xl mx-auto">
-          多样化的旅行主题展示 
-          <span className="inline-block mx-2 text-slate-400">•</span>
-          <span className="text-sm text-slate-500">（仅供参考展示）</span>
+          多样化的旅行主题展示
         </p>
       </div>
       
@@ -658,19 +611,19 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
               您的专属 <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full text-lg font-bold shadow-lg">AI</span> 旅行规划师
             </p>
             <p className="text-lg text-gray-600 leading-relaxed">
-              🌟 智能分析偏好 • 🎯 精准匹配路线 • ✨ 个性化体验定制
+              🌟 AI洞察偏好 • 🎯 一键定制路线 • 🚩 传承红色文化 • ✨ 畅享专属旅程
             </p>
           </div>
           
           {/* 现代化功能标签 - 卡片风格 */}
-          <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {[
               { name: "城市探索", emoji: "🏙️", color: "from-blue-400 to-cyan-400" },
               { name: "自然风光", emoji: "🌲", color: "from-green-400 to-emerald-400" },
               { name: "文化体验", emoji: "🎭", color: "from-purple-400 to-violet-400" },
+              { name: "红色旅游", emoji: "🚩", color: "from-red-500 to-rose-500" },
               { name: "美食之旅", emoji: "🍜", color: "from-orange-400 to-amber-400" },
               { name: "户外冒险", emoji: "⛰️", color: "from-teal-400 to-green-400" },
-              { name: "摄影之旅", emoji: "📸", color: "from-pink-400 to-rose-400" },
             ].map((tag, index) => (
               <div
                 key={`tag-${index}`}
@@ -733,11 +686,6 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
             </Button>
           </div>
           
-          {/* 辅助提示文字 */}
-          <p className="mt-6 text-gray-500 text-sm max-w-md mx-auto leading-relaxed">
-            🚀 只需用自然语言描述您的想法<br />
-            ✨ AI将为您智能规划完美行程
-          </p>
         </main>
 
         {/* 非核心内容 - 在老人模式下隐藏 */}
@@ -760,7 +708,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                     {[
                       {
                         icon: "🎯",
@@ -773,6 +721,12 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
                         title: "秒速生成",
                         description: "3秒完成行程规划",
                         color: "from-purple-400 to-violet-400"
+                      },
+                      {
+                        icon: "🚩",
+                        title: "红色教育",
+                        description: "传承革命精神",
+                        color: "from-red-500 to-rose-500"
                       },
                       {
                         icon: "🌟",
@@ -806,11 +760,6 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
               </div>
             </div>
 
-            {/* 旅行统计信息 */}
-            <div className={`transform transition-all duration-1000 ease-out delay-600 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <TravelStatsPanel />
-            </div>
-
             {/* 滚动旅行目的地展示 */}
             <div className={`w-full max-w-6xl mx-auto transform transition-all duration-1000 ease-out delay-700 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
               <ScrollingDestinationPanel />
@@ -828,23 +777,29 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
                 <p className="text-slate-600 max-w-2xl mx-auto">体验AI驱动的旅行规划，让您的旅程更加轻松愉快</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
                 <FeatureCard
                   icon={<span className="text-2xl">💬</span>}
-                  title="自然语言交互"
-                  description="像聊天一样描述您的需求，AI即可理解并规划。无需复杂操作，简单交流即可。"
+                  title="自然对话 轻松规划"
+                  description="无需专业术语，像朋友一样告诉AI你想去哪就行！"
                   delay="delay-[1000ms]"
                 />
                 <FeatureCard
                   icon={<span className="text-2xl">🎨</span>}
-                  title="个性化定制"
-                  description="根据您的兴趣、预算和时间，打造独一无二的旅程。每次旅行都与众不同。"
+                  title="独一无二 旅行方案"
+                  description="兴趣、时间、旅行风格——都由你说了算"
                   delay="delay-[1100ms]"
                 />
                 <FeatureCard
+                  icon={<span className="text-2xl">🚩</span>}
+                  title="革命文化 智能呈现"
+                  description="AI规划重走红色路线，沉浸式体验爱国主义教育"
+                  delay="delay-[1150ms]"
+                />
+                <FeatureCard
                   icon={<span className="text-2xl">🗺️</span>}
-                  title="智能行程规划"
-                  description="自动安排景点、餐饮、交通，省时省心。贴心建议让您的旅途更加顺畅愉快。"
+                  title="一键生成 完美行程"
+                  description="自动安排景点、交通与美食，旅行从未如此简单轻松！"
                   delay="delay-[1200ms]"
                 />
               </div>
@@ -871,8 +826,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
                   <div className="mb-4 w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-lg z-10 transform hover:scale-110 transition-transform duration-300 elder:transform-none elder:w-16 elder:h-16 elder:text-2xl">
                     1
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-2 elder:text-xl">描述您的需求</h3>
-                  <p className="text-slate-600 text-sm elder:text-base">告诉AI您的旅行偏好、目的地想法和时间预算</p>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2 elder:text-xl">说出你的旅行灵感</h3>
+                  <p className="text-slate-600 text-sm elder:text-base">用你自己的话告诉AI：我想去哪、玩什么、多久</p>
                 </div>
                 
                 {/* 步骤2 */}
@@ -880,8 +835,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
                   <div className="mb-4 w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-lg z-10 transform hover:scale-110 transition-transform duration-300 elder:transform-none elder:w-16 elder:h-16 elder:text-2xl">
                     2
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-2 elder:text-xl">获取智能推荐</h3>
-                  <p className="text-slate-600 text-sm elder:text-base">AI根据您的需求生成个性化旅行计划</p>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2 elder:text-xl">拿到专属旅行草案</h3>
+                  <p className="text-slate-600 text-sm elder:text-base">AI生成一份专属你的旅行计划，准备出发吧！</p>
                 </div>
                 
                 {/* 步骤3 */}
@@ -889,8 +844,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
                   <div className="mb-4 w-14 h-14 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center text-white text-xl font-bold shadow-lg z-10 transform hover:scale-110 transition-transform duration-300 elder:transform-none elder:w-16 elder:h-16 elder:text-2xl">
                     3
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-2 elder:text-xl">调整并确认</h3>
-                  <p className="text-slate-600 text-sm elder:text-base">根据自己的喜好灵活调整，最终确定完美行程</p>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2 elder:text-xl">灵活调整，立即出发</h3>
+                  <p className="text-slate-600 text-sm elder:text-base">根据偏好微调，确认无误后一键锁定完美行程</p>
                 </div>
               </div>
             </section>

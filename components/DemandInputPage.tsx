@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Button } from './ui/Button';
 import { Input, TextArea } from './ui/Input';
 import { Slider } from './ui/Slider';
-import { SelectionCard, SelectionGrid, TagCloud } from './ui/Selection';
+import { SelectionCard, SelectionGrid } from './ui/Selection';
 import { UserDemand } from '../types';
 import { APP_NAME } from '../constants';
 import { useElderModeContext } from './ElderModeContext';
@@ -38,66 +38,82 @@ const TravelMapPinIcon = () => (
   </svg>
 );
 
-const TravelHeartIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-  </svg>
+const RedFlagIcon = () => (
+  <span className="text-3xl">🚩</span> 
 );
 
 const TravelCameraIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
+  <span className="text-3xl">📹</span> 
 );
 
 const TravelMountainIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12l5 5L20 7" />
-  </svg>
+  <span className="text-3xl">🏔️</span>
 );
 
 const TravelBeachIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-  </svg>
+  <span className="text-3xl">🏖️</span>
 );
 
 const TravelCityIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-  </svg>
+  <span className="text-3xl">🏙️</span>
 );
 
 const TravelFoodIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-  </svg>
+  <span className="text-3xl">🍽️</span>
 );
 
 // 旅行类型数据
 const travelTypesData = [
-  { id: 'relaxing', title: '休闲度假', description: '放松身心，享受悠闲时光', icon: <TravelBeachIcon />, color: 'blue' as const },
-  { id: 'adventure', title: '探险户外', description: '挑战自我，探索未知领域', icon: <TravelMountainIcon />, color: 'green' as const },
-  { id: 'cultural', title: '文化深度', description: '感受历史，体验当地文化', icon: <TravelCityIcon />, color: 'purple' as const },
-  { id: 'romantic', title: '浪漫蜜月', description: '二人世界，留下美好回忆', icon: <TravelHeartIcon />, color: 'pink' as const },
-  { id: 'photography', title: '摄影采风', description: '捕捉美景，记录精彩瞬间', icon: <TravelCameraIcon />, color: 'orange' as const },
-  { id: 'food', title: '美食之旅', description: '品尝美味，探索当地料理', icon: <TravelFoodIcon />, color: 'indigo' as const },
+  { 
+    id: 'relaxing', 
+    title: '悠然假期', 
+    description: '慢节奏，放松身心', 
+    icon: <TravelBeachIcon />, 
+    color: 'blue' as const,
+    prompt: '请为我安排一个放松舒适的旅行，节奏要慢，重点关注休闲度假、温泉疗养等能让身心得到充分放松的活动和场所'
+  },
+  { 
+    id: 'adventure', 
+    title: '探索未知', 
+    description: '征服自然的精彩旅程', 
+    icon: <TravelMountainIcon />, 
+    color: 'green' as const,
+    prompt: '请为我规划一个充满冒险精神的旅行，包含户外探险、登山徒步、极限运动等挑战性活动，让我能够征服自然、挑战自我'
+  },
+  { 
+    id: 'cultural', 
+    title: '文化之旅', 
+    description: '历史与人文的深度沉浸', 
+    icon: <TravelCityIcon />, 
+    color: 'purple' as const,
+    prompt: '请为我安排一个深度的文化体验之旅，重点包含历史古迹、博物馆、传统文化体验、当地民俗活动等，让我能够深入了解当地的历史文化底蕴'
+  },
+  { 
+    id: 'redtour', 
+    title: '精神之旅', 
+    description: '走进历史现场，聆听信仰的回声', 
+    icon: <RedFlagIcon />, 
+    color: 'red' as const,
+    prompt: '请为我规划一个红色文化主题的旅行，重点参观革命历史遗址、纪念馆、红色教育基地等，让我能够重温历史、传承红色精神'
+  },
+  { 
+    id: 'photography', 
+    title: '镜头里的风景', 
+    description: '定格每一帧美好', 
+    icon: <TravelCameraIcon />, 
+    color: 'orange' as const,
+    prompt: '请为我安排一个摄影主题的旅行，重点推荐风景优美、适合摄影的景点，让我能够捕捉到最美的画面'
+  },
+  { 
+    id: 'food', 
+    title: '舌尖盛宴', 
+    description: '走哪儿吃哪儿，探味世界', 
+    icon: <TravelFoodIcon />, 
+    color: 'indigo' as const,
+    prompt: '请为我规划一个美食主题的旅行，重点推荐当地特色餐厅、街头小吃、传统美食体验活动，让我能够品尝到最地道的当地美味'
+  },
 ];
 
-// 兴趣标签数据
-const interestTagsData = [
-  { label: '古迹名胜', value: 'historic', color: 'purple' as const },
-  { label: '自然风光', value: 'nature', color: 'green' as const },
-  { label: '海滩阳光', value: 'beach', color: 'blue' as const },
-  { label: '雪山温泉', value: 'mountain', color: 'indigo' as const },
-  { label: '都市繁华', value: 'city', color: 'orange' as const },
-  { label: '民俗体验', value: 'culture', color: 'pink' as const },
-  { label: '极限运动', value: 'extreme', color: 'orange' as const },
-  { label: '亲子乐园', value: 'family', color: 'green' as const },
-  { label: '奢华享受', value: 'luxury', color: 'purple' as const },
-  { label: '经济实惠', value: 'budget', color: 'blue' as const },
-];
 
 // 关怀模式简化版组件
 const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, isLoading }) => {
@@ -127,7 +143,7 @@ const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, 
               value={demand.startCity}
               onChange={handleChange}
               placeholder="您从哪里出发？"
-              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-white/90 transition-all duration-300"
             />
           </div>
 
@@ -140,7 +156,7 @@ const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, 
               value={demand.destination}
               onChange={handleChange}
               placeholder="您想去哪里？"
-              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-white/90 transition-all duration-300"
             />
           </div>
 
@@ -152,8 +168,8 @@ const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, 
               name="duration"
               value={demand.duration}
               onChange={handleChange}
-              placeholder="例如：7天"
-              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+              placeholder="例如：5天"
+              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-white/90 transition-all duration-300"
             />
           </div>
 
@@ -166,7 +182,7 @@ const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, 
               value={demand.people}
               onChange={handleChange}
               placeholder="例如：2人"
-              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-white/90 transition-all duration-300"
             />
           </div>
 
@@ -179,7 +195,7 @@ const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, 
               onChange={handleChange}
               placeholder="例如：希望包含博物馆和美食体验"
               rows={4}
-              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none resize-none"
+              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-white/90 transition-all duration-300 resize-none"
             />
           </div>
 
@@ -208,12 +224,11 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
   const totalSteps = 3;
 
   // 滑动条状态
-  const [duration, setDuration] = useState(7);
+  const [duration, setDuration] = useState(3);
   const [people, setPeople] = useState(2);
   
   // 选择状态
   const [selectedTravelType, setSelectedTravelType] = useState<string>('');
-  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   
   // 表单验证状态
   const [errors, setErrors] = useState<{[key: string]: string}>({});
@@ -229,9 +244,6 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
       case 2:
         if (duration < 1) newErrors.duration = '行程天数至少1天';
         if (people < 1) newErrors.people = '人数至少1人';
-        break;
-      case 3:
-        if (!selectedTravelType) newErrors.travelType = '请选择旅行类型';
         break;
     }
     
@@ -256,28 +268,38 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
   };
 
   const handleSubmit = useCallback(() => {
+    // 构建完整的原始输入信息
+    const rawInputParts = [];
+    
+    // 添加旅行类型的专门 prompt
+    if (selectedTravelType) {
+      const travelType = travelTypesData.find(t => t.id === selectedTravelType);
+      if (travelType?.prompt) {
+        rawInputParts.push(travelType.prompt);
+      }
+    }
+    
+    // 添加用户输入的其他需求
+    if (demand.rawInput && demand.rawInput.trim()) {
+      rawInputParts.push(`其他需求：${demand.rawInput.trim()}`);
+    }
+    
     const finalDemand: UserDemand = {
       ...demand,
       duration: duration.toString(),
       people: people.toString(),
       budget: '', // 不再收集预算信息
-      rawInput: `旅行类型：${selectedTravelType}，兴趣：${selectedInterests.join(', ')}`
+      rawInput: rawInputParts.join('。') || '' // 用句号连接所有信息，如果没有信息则为空字符串
     };
     
     onSubmitDemand(finalDemand);
-  }, [demand, duration, people, selectedTravelType, selectedInterests, onSubmitDemand]);
+  }, [demand, duration, people, selectedTravelType, onSubmitDemand]);
 
   const handleTravelTypeSelect = (typeId: string) => {
     setSelectedTravelType(typeId);
   };
 
-  const handleInterestToggle = (interest: string) => {
-    setSelectedInterests(prev => 
-      prev.includes(interest) 
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
-    );
-  };
+  // 删除了handleInterestToggle函数
 
   const handleInputChange = (field: keyof UserDemand, value: string) => {
     setDemand(prev => ({ ...prev, [field]: value }));
@@ -285,31 +307,53 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
 
   // 步骤进度指示器
   const StepIndicator = () => (
-    <div className="flex justify-center mb-8">
+    <div className="flex justify-center mb-10">
       <div className="flex items-center space-x-4">
         {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => (
           <React.Fragment key={step}>
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
-                step <= currentStep
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              {step < currentStep ? (
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                step
+            <div className="relative">
+              {/* 当前步骤的彩色光晕效果 */}
+              {step === currentStep && (
+                <div className={`absolute -inset-2 rounded-full blur-md ${
+                  step === 1 ? 'bg-blue-400/40 animate-pulse-slow' : 
+                  step === 2 ? 'bg-green-400/40 animate-pulse-slow' : 
+                  'bg-orange-400/40 animate-pulse-slow'
+                }`}></div>
               )}
-            </div>
-            {step < totalSteps && (
+              
               <div
-                className={`w-12 h-1 rounded-full transition-all duration-300 ${
-                  step < currentStep ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-200'
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-semibold transition-all duration-500 ${
+                  step < currentStep
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl scale-95' 
+                    : step === currentStep 
+                    ? `bg-gradient-to-r ${
+                        step === 1 ? 'from-blue-500 to-purple-600' : 
+                        step === 2 ? 'from-green-500 to-blue-600' : 
+                        'from-orange-500 to-red-600'
+                      } text-white shadow-2xl scale-105` 
+                    : 'bg-gray-200 text-gray-500'
                 }`}
-              />
+              >
+                {step < currentStep ? (
+                  <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <span className={step === currentStep ? 'animate-pulse' : ''}>{step}</span>
+                )}
+              </div>
+            </div>
+            
+            {step < totalSteps && (
+              <div className="relative w-16 h-2">
+                <div
+                  className={`absolute inset-y-0 left-0 h-1 rounded-full transition-all duration-700 ${
+                    step < currentStep ? 'bg-gradient-to-r from-blue-400 to-purple-500 w-full' : 
+                    step === currentStep ? 'bg-gradient-to-r from-blue-400/50 to-purple-500/50 w-1/3 animate-pulse-gentle' : 
+                    'bg-gray-200 w-full'
+                  }`}
+                ></div>
+              </div>
             )}
           </React.Fragment>
         ))}
@@ -321,12 +365,12 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 transform transition-all duration-500">
             <div className="text-center space-y-2 mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                规划您的旅程
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
+                定制专属旅行，从这里启程
               </h2>
-              <p className="text-gray-600">让我们先了解您的基本行程安排</p>
+              <p className="text-gray-600">告诉我们出发地与目的地，AI 将为你开启智慧旅途的第一步</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -338,6 +382,7 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
                 icon={<TravelMapPinIcon />}
                 floatingLabel
                 error={errors.startCity}
+                className="bg-white/90 backdrop-blur-md shadow-md border border-white/50"
               />
               <Input
                 label="目的地"
@@ -347,6 +392,7 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
                 icon={<TravelMapPinIcon />}
                 floatingLabel
                 error={errors.destination}
+                className="bg-white/90 backdrop-blur-md shadow-md border border-white/50"
               />
             </div>
           </div>
@@ -354,19 +400,19 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
 
       case 2:
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 transform transition-all duration-500">
             <div className="text-center space-y-2 mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                行程详情
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent animate-gradient-x">
+                 设定出行节奏，安排同行伙伴
               </h2>
-              <p className="text-gray-600">设置您的旅行天数和人数</p>
+              <p className="text-gray-600">请选择您的出行天数与随行人数，我们为您量身定制专属节奏</p>
             </div>
             
             <div className="space-y-8">
               <Slider
                 label="旅行天数"
                 min={1}
-                max={5}
+                max={7}
                 value={duration}
                 onChange={setDuration}
                 step={1}
@@ -392,12 +438,12 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
 
       case 3:
         return (
-          <div className="space-y-8">
+          <div className="space-y-8 transform transition-all duration-500">
             <div className="text-center space-y-2 mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                个性化定制
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent animate-gradient-x">
+                定制旅行风格 · 满足你的全部幻想
               </h2>
-              <p className="text-gray-600">选择您的旅行风格和兴趣偏好</p>
+            
             </div>
             
             <SelectionGrid
@@ -418,21 +464,14 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
               ))}
             </SelectionGrid>
             
-            <TagCloud
-              title="兴趣偏好"
-              tags={interestTagsData}
-              selectedTags={selectedInterests}
-              onTagToggle={handleInterestToggle}
-              maxSelections={5}
-            />
-            
             <div className="mt-6">
               <TextArea
-                label="特殊需求"
+                label="✨ 还有任何需要我们特别照顾的地方吗？请告诉我们，我们会尽力为您安排贴心旅程～"
                 value={demand.rawInput}
                 onChange={(e) => handleInputChange('rawInput', e.target.value)}
-                placeholder="请描述您的特殊需求或期望（可选）"
+                placeholder="如：不走山路、饮食清淡、携带老人或小孩、喜欢慢节奏旅行…（可选）"
                 floatingLabel
+                className="bg-white/90 backdrop-blur-md shadow-md border border-white/50"
               />
             </div>
           </div>
@@ -445,12 +484,37 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* 动态渐变背景 - 根据当前步骤变色 */}
+      <div 
+        className={`absolute inset-0 transition-colors duration-1000 ease-in-out ${
+          currentStep === 1 ? 'bg-gradient-to-br from-blue-50 via-purple-50/30 to-pink-50' : 
+          currentStep === 2 ? 'bg-gradient-to-br from-green-50 via-blue-50/30 to-cyan-50' : 
+          'bg-gradient-to-br from-orange-50 via-red-50/30 to-amber-50'
+        }`}
+      ></div>
+      
       {/* 背景装饰 */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-10 left-10 w-20 h-20 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 bg-purple-200 rounded-full opacity-20 animate-pulse animation-delay-1000"></div>
-        <div className="absolute bottom-20 left-32 w-24 h-24 bg-pink-200 rounded-full opacity-20 animate-pulse animation-delay-2000"></div>
-        <div className="absolute bottom-32 right-10 w-12 h-12 bg-orange-200 rounded-full opacity-20 animate-pulse animation-delay-3000"></div>
+        <div className={`absolute top-10 left-10 w-20 h-20 rounded-full opacity-20 animate-pulse-slow ${
+          currentStep === 1 ? 'bg-blue-300' : 
+          currentStep === 2 ? 'bg-green-300' : 
+          'bg-orange-300'
+        }`}></div>
+        <div className={`absolute top-32 right-20 w-16 h-16 rounded-full opacity-20 animate-pulse-slow animation-delay-1000 ${
+          currentStep === 1 ? 'bg-purple-300' : 
+          currentStep === 2 ? 'bg-blue-300' : 
+          'bg-red-300'
+        }`}></div>
+        <div className={`absolute bottom-20 left-32 w-24 h-24 rounded-full opacity-20 animate-float-gentle animation-delay-2000 ${
+          currentStep === 1 ? 'bg-pink-300' : 
+          currentStep === 2 ? 'bg-cyan-300' : 
+          'bg-amber-300'
+        }`}></div>
+        <div className={`absolute bottom-32 right-10 w-12 h-12 rounded-full opacity-20 animate-float-gentle animation-delay-3000 ${
+          currentStep === 1 ? 'bg-violet-300' : 
+          currentStep === 2 ? 'bg-teal-300' : 
+          'bg-yellow-300'
+        }`}></div>
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8">
@@ -469,28 +533,42 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
 
         {/* 主要内容区域 */}
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8">
-            {renderStep()}
+          <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl p-8 transition-all duration-500">
+            {/* 动态渐变背景光晕 - 根据当前步骤变色 */}
+            <div 
+              className={`absolute -inset-1 rounded-3xl blur-xl opacity-40 transition-all duration-700 ease-out ${
+                currentStep === 1 ? 'bg-gradient-to-r from-blue-400/50 to-purple-500/50' : 
+                currentStep === 2 ? 'bg-gradient-to-r from-green-400/50 to-blue-500/50' : 
+                'bg-gradient-to-r from-orange-400/50 to-red-500/50'
+              }`}
+            ></div>
+            <div className="relative z-10">
+              {renderStep()}
+            </div>
             
             {/* 导航按钮 */}
-            <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-              <Button
-                variant="secondary"
-                onClick={handlePrevious}
-                disabled={currentStep === 1}
-                className="px-6 py-3"
-              >
-                上一步
-              </Button>
+            <div className="flex items-center mt-8 pt-6 border-t border-gray-200">
+              {/* 第一步时不显示"上一步"按钮，但保留空间以保持布局一致 */}
+              {currentStep !== 1 ? (
+                <Button
+                  variant="secondary"
+                  onClick={handlePrevious}
+                  className="px-6 py-3 transform transition-transform duration-300 hover:scale-105 hover:shadow-lg"
+                >
+                  上一步
+                </Button>
+              ) : (
+                <div className="invisible px-6 py-3">上一步</div>
+              )}
               
-              <div className="text-sm text-gray-500">
+              <div className="flex-1 text-center text-sm text-gray-500">
                 第 {currentStep} 步，共 {totalSteps} 步
               </div>
               
               <Button
                 onClick={handleNext}
                 disabled={isLoading}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform transition-transform duration-300 hover:scale-105 hover:shadow-xl"
               >
                 {isLoading ? '生成中...' : currentStep === totalSteps ? '开始规划' : '下一步'}
               </Button>
