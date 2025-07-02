@@ -1,4 +1,4 @@
-import { AMAP_CONFIG } from '../constants';
+import { BACKEND_CONFIG } from "@/constants";
 
 export interface GeocodingResult {
   longitude: number;
@@ -6,49 +6,8 @@ export interface GeocodingResult {
   formattedAddress?: string;
 }
 
-// 声明全局AMap对象
-declare global {
-  interface Window {
-    AMap: any;
-    _AMapSecurityConfig: any;
-  }
-}
 
-// 初始化高德地图安全密钥
-const initAMapSecurity = () => {
-  if (typeof window !== 'undefined' && AMAP_CONFIG.SECURITY_JS_CODE) {
-    window._AMapSecurityConfig = {
-      securityJsCode: AMAP_CONFIG.SECURITY_JS_CODE
-    };
-  }
-};
-
-// 确保高德地图已加载
-const ensureAMapLoaded = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') {
-      reject(new Error('Window对象不可用'));
-      return;
-    }
-
-    if (window.AMap) {
-      resolve();
-      return;
-    }
-
-    // 初始化安全密钥
-    initAMapSecurity();
-
-    // 动态加载高德地图JS API
-    const script = document.createElement('script');
-    script.src = `https://webapi.amap.com/maps?v=${AMAP_CONFIG.VERSION}&key=${AMAP_CONFIG.KEY}&plugin=AMap.Geocoder`;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('高德地图API加载失败'));
-    document.head.appendChild(script);
-  });
-};
-
-// 使用高德地图JavaScript API进行地理编码
+// 调用后端地理编码服务
 export const geocodeAddress = async (address: string): Promise<GeocodingResult | null> => {
   if (!address || !address.trim()) {
     console.warn('地址为空，无法进行地理编码');
@@ -56,71 +15,33 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult |
   }
 
   try {
-    // 确保高德地图API已加载
-    await ensureAMapLoaded();
-
-    return new Promise((resolve) => {
-      // 使用高德地图JavaScript API的Geocoder插件
-      window.AMap.plugin("AMap.Geocoder", function() {
-        const geocoder = new window.AMap.Geocoder({
-          city: "010" // 默认使用北京市，可以根据需要调整
-        });
-
-        geocoder.getLocation(address.trim(), function(status: string, result: any) {
-          if (status === "complete" && result.info === "OK" && result.geocodes && result.geocodes.length > 0) {
-            const geocode = result.geocodes[0];
-            const location = geocode.location;
-            
-            if (location && typeof location.getLng === 'function' && typeof location.getLat === 'function') {
-              const longitude = location.getLng();
-              const latitude = location.getLat();
-              
-              if (!isNaN(longitude) && !isNaN(latitude) && isFinite(longitude) && isFinite(latitude)) {
-                resolve({
-                  longitude,
-                  latitude,
-                  formattedAddress: geocode.formatted_address
-                });
-                return;
-              }
-            }
-          }
-          
-          console.warn(`无法获取地址 "${address}" 的地理编码:`, result);
-          resolve(null);
-        });
-      });
+    const response = await fetch(`${BACKEND_CONFIG.BASE_URL}${BACKEND_CONFIG.ENDPOINTS.GEO_CODING}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address: address.trim()
+      })
     });
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success && result.data) {
+        return {
+          longitude: result.data.longitude,
+          latitude: result.data.latitude,
+          formattedAddress: result.data.formatted_address
+        };
+      }
+    }
+    
+    console.warn(`无法获取地址 "${address}" 的地理编码`);
+    return null;
   } catch (error) {
     console.error(`地理编码请求失败 (${address}):`, error);
     return null;
   }
-};
-
-// 批量地理编码
-export const batchGeocode = async (addresses: string[]): Promise<Map<string, GeocodingResult>> => {
-  const results = new Map<string, GeocodingResult>();
-  
-  // 并发处理，但限制并发数量
-  const BATCH_SIZE = 5;
-  for (let i = 0; i < addresses.length; i += BATCH_SIZE) {
-    const batch = addresses.slice(i, i + BATCH_SIZE);
-    const promises = batch.map(async (address) => {
-      const result = await geocodeAddress(address);
-      if (result) {
-        results.set(address, result);
-      }
-    });
-    
-    await Promise.all(promises);
-    
-    // 添加延迟避免API限流
-    if (i + BATCH_SIZE < addresses.length) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
-  
-  return results;
 };
 
 // 从位置名称中提取地点名称（移除时间、类型等信息）
@@ -184,9 +105,6 @@ export const updateTravelPlanCoordinates = async (plan: any): Promise<any> => {
               };
               hasUpdates = true;
               console.log(`更新活动坐标: ${activity.position} -> (${geocodingResult.longitude}, ${geocodingResult.latitude})`);
-              
-              // 添加延迟避免API限流
-              await new Promise(resolve => setTimeout(resolve, 200));
             } else {
               console.warn(`无法获取坐标: ${activity.position}`);
             }
@@ -218,9 +136,6 @@ export const updateTravelPlanCoordinates = async (plan: any): Promise<any> => {
           };
           hasUpdates = true;
           console.log(`更新POI坐标: ${poi.name} -> (${geocodingResult.longitude}, ${geocodingResult.latitude})`);
-          
-          // 添加延迟避免API限流
-          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
     }

@@ -22,9 +22,10 @@ export const MAX_POLLS = 120; // Max 60 seconds of polling - 更长的轮询时�
 
 // 后端API配置
 export const BACKEND_CONFIG = {
-  BASE_URL: 'http://localhost:8081', // Python Flask服务器地址
+  BASE_URL: 'http://localhost:8082', // Python Flask服务器地址
   ENDPOINTS: {
     START_PLAN: '/plan/start',
-    GET_RESULT: '/plan/result'
+    GET_RESULT: '/plan/result',
+    GEO_CODING: '/geocoding'
   }
 };

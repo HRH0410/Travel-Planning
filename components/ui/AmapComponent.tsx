@@ -649,7 +649,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
         border: '1px solid #ddd',
         minHeight: '300px'
       }}
-      title="💡 3D交互提示：右键拖拽可旋转视角，按住Shift+鼠标拖拽可调整倾斜角度，滚轮缩放可查看3D建筑"
     />
   );
 };

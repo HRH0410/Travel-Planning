@@ -836,18 +836,27 @@ const MapView: React.FC<MapViewProps> = ({
     return fixedMarkers;
   };
 
-  // 用于追踪 dailyPlans 内容变化的 ref
+  // 用于追踪 dailyPlans 内容和 activeDay 变化的 ref
   const dailyPlansContentRef = useRef<string>('');
+  const activeDayRef = useRef<number | undefined>(0);
   
   // 初始化标记点
   useEffect(() => {
-    // 检查 dailyPlans 的内容是否真的发生了变化（而不仅仅是引用变化）
+    // 检查 dailyPlans 的内容和 activeDay 是否真的发生了变化
     const currentContent = JSON.stringify(dailyPlans);
-    if (currentContent === dailyPlansContentRef.current && markers.length > 0) {
-      // 如果内容没有变化且已有标记，不重新初始化
+    const currentActiveDay = activeDay;
+
+    if (
+      currentContent === dailyPlansContentRef.current &&
+      currentActiveDay === activeDayRef.current &&
+      markers.length > 0
+    ) {
+      // 如果内容和活动天都没有变化且已有标记，不重新初始化
       return;
     }
+
     dailyPlansContentRef.current = currentContent;
+    activeDayRef.current = currentActiveDay;
     
     const initializeMarkers = async () => {
       const initialMarkers: Array<{
@@ -919,8 +928,8 @@ const MapView: React.FC<MapViewProps> = ({
     }
   }, [selectedActivityId, markers]);
 
-  // 计算地图中心点 - 优先选中的标记点，严格验证
-  // 计算地图中心点 - 优先选中的标记点，严格验证，使用 useMemo 缓存结果
+  // 计算地图中心点 - 优先选中的标记，严格验证
+  // 计算地图中心点 - 优先选中的标记，严格验证，使用 useMemo 缓存结果
   const mapCenter = useMemo(() => {
     console.log('计算地图中心点，总标记数量:', markers.length);
     

@@ -366,7 +366,7 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
               <Slider
                 label="旅行天数"
                 min={1}
-                max={30}
+                max={5}
                 value={duration}
                 onChange={setDuration}
                 step={1}
@@ -378,7 +378,7 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
               <Slider
                 label="出行人数"
                 min={1}
-                max={20}
+                max={5}
                 value={people}
                 onChange={setPeople}
                 step={1}
