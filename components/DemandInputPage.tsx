@@ -3,7 +3,6 @@ import { Button } from './ui/Button';
 import { Input, TextArea } from './ui/Input';
 import { Slider } from './ui/Slider';
 import { SelectionCard, SelectionGrid, TagCloud } from './ui/Selection';
-import { Modal } from './ui/Modal';
 import { UserDemand } from '../types';
 import { APP_NAME } from '../constants';
 import { useElderModeContext } from './ElderModeContext';
@@ -30,12 +29,6 @@ const TravelClockIcon = () => (
 
 const TravelUsersIcon = () => (
   <span className="w-6 h-6 inline-flex items-center justify-center text-lg">🧑‍🧑‍🧒</span>
-);
-
-const TravelCreditCardIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-  </svg>
 );
 
 const TravelMapPinIcon = () => (
@@ -177,19 +170,6 @@ const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, 
             />
           </div>
 
-          {/* 预算 */}
-          <div>
-            <h2 className="text-4xl font-bold text-blue-600 mb-4">预算</h2>
-            <input
-              type="text"
-              name="budget"
-              value={demand.budget}
-              onChange={handleChange}
-              placeholder="例如：5000元"
-              className="w-full text-2xl p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-
           {/* 其他需求 */}
           <div>
             <h2 className="text-4xl font-bold text-blue-600 mb-4">其他需求</h2>
@@ -225,12 +205,11 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
 }) => {
   const [demand, setDemand] = useState<UserDemand>(initialDemand);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   // 滑动条状态
   const [duration, setDuration] = useState(7);
   const [people, setPeople] = useState(2);
-  const [budgetRange, setBudgetRange] = useState({ min: 3000, max: 8000 });
   
   // 选择状态
   const [selectedTravelType, setSelectedTravelType] = useState<string>('');
@@ -238,18 +217,6 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
   
   // 表单验证状态
   const [errors, setErrors] = useState<{[key: string]: string}>({});
-
-  // 自定义预算模态框状态
-  const [showCustomBudgetModal, setShowCustomBudgetModal] = useState(false);
-  const [customMinBudget, setCustomMinBudget] = useState('');
-  const [customMaxBudget, setCustomMaxBudget] = useState('');
-
-  const formatBudget = (value: number) => {
-    if (value >= 10000) {
-      return `${(value / 10000).toFixed(1)}万元`;
-    }
-    return `${value}元`;
-  };
 
   const validateStep = (step: number): boolean => {
     const newErrors: {[key: string]: string} = {};
@@ -264,9 +231,6 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
         if (people < 1) newErrors.people = '人数至少1人';
         break;
       case 3:
-        if (budgetRange.min >= budgetRange.max) newErrors.budget = '预算范围设置有误';
-        break;
-      case 4:
         if (!selectedTravelType) newErrors.travelType = '请选择旅行类型';
         break;
     }
@@ -296,12 +260,12 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
       ...demand,
       duration: duration.toString(),
       people: people.toString(),
-      budget: `${budgetRange.min}-${budgetRange.max}`,
+      budget: '', // 不再收集预算信息
       rawInput: `旅行类型：${selectedTravelType}，兴趣：${selectedInterests.join(', ')}`
     };
     
     onSubmitDemand(finalDemand);
-  }, [demand, duration, people, budgetRange, selectedTravelType, selectedInterests, onSubmitDemand]);
+  }, [demand, duration, people, selectedTravelType, selectedInterests, onSubmitDemand]);
 
   const handleTravelTypeSelect = (typeId: string) => {
     setSelectedTravelType(typeId);
@@ -317,38 +281,6 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
 
   const handleInputChange = (field: keyof UserDemand, value: string) => {
     setDemand(prev => ({ ...prev, [field]: value }));
-  };
-
-  // 处理自定义预算
-  const handleCustomBudgetSubmit = () => {
-    const min = parseInt(customMinBudget);
-    const max = parseInt(customMaxBudget);
-    
-    if (isNaN(min) || isNaN(max)) {
-      alert('请输入有效的数字');
-      return;
-    }
-    
-    if (min >= max) {
-      alert('最低预算必须小于最高预算');
-      return;
-    }
-    
-    if (min < 0) {
-      alert('预算不能为负数');
-      return;
-    }
-    
-    setBudgetRange({ min, max });
-    setShowCustomBudgetModal(false);
-    setCustomMinBudget('');
-    setCustomMaxBudget('');
-  };
-
-  const openCustomBudgetModal = () => {
-    setCustomMinBudget(budgetRange.min.toString());
-    setCustomMaxBudget(budgetRange.max.toString());
-    setShowCustomBudgetModal(true);
   };
 
   // 步骤进度指示器
@@ -462,154 +394,6 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
         return (
           <div className="space-y-8">
             <div className="text-center space-y-2 mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                预算设置
-              </h2>
-              <p className="text-gray-600">选择最适合您的预算范围</p>
-            </div>
-            
-            {/* 预算选择卡片 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* 经济型 */}
-              <div 
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                  budgetRange.min === 1000 && budgetRange.max === 3000
-                    ? 'border-green-400 bg-gradient-to-br from-green-50 to-green-100 shadow-lg shadow-green-200/50'
-                    : 'border-gray-200 bg-white hover:border-green-300'
-                }`}
-                onClick={() => setBudgetRange({ min: 1000, max: 3000 })}
-              >
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <h3 className="font-bold text-lg text-green-700 mb-1">经济型</h3>
-                  <p className="text-2xl font-bold text-green-600 mb-2">1000-3000元</p>
-                  <p className="text-sm text-gray-600">精打细算，性价比之选</p>
-                </div>
-              </div>
-
-              {/* 舒适型 */}
-              <div 
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                  budgetRange.min === 3000 && budgetRange.max === 8000
-                    ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg shadow-blue-200/50'
-                    : 'border-gray-200 bg-white hover:border-blue-300'
-                }`}
-                onClick={() => setBudgetRange({ min: 3000, max: 8000 })}
-              >
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="font-bold text-lg text-blue-700 mb-1">舒适型</h3>
-                  <p className="text-2xl font-bold text-blue-600 mb-2">3000-8000元</p>
-                  <p className="text-sm text-gray-600">品质与价格的完美平衡</p>
-                </div>
-              </div>
-
-              {/* 豪华型 */}
-              <div 
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                  budgetRange.min === 8000 && budgetRange.max === 20000
-                    ? 'border-purple-400 bg-gradient-to-br from-purple-50 to-purple-100 shadow-lg shadow-purple-200/50'
-                    : 'border-gray-200 bg-white hover:border-purple-300'
-                }`}
-                onClick={() => setBudgetRange({ min: 8000, max: 20000 })}
-              >
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
-                  </div>
-                  <h3 className="font-bold text-lg text-purple-700 mb-1">豪华型</h3>
-                  <p className="text-2xl font-bold text-purple-600 mb-2">8000-20000元</p>
-                  <p className="text-sm text-gray-600">尊享体验，品味之旅</p>
-                </div>
-              </div>
-
-              {/* 自定义 */}
-              <div 
-                className={`p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                  ![
-                    { min: 1000, max: 3000 },
-                    { min: 3000, max: 8000 },
-                    { min: 8000, max: 20000 }
-                  ].some(preset => preset.min === budgetRange.min && preset.max === budgetRange.max)
-                    ? 'border-orange-400 bg-gradient-to-br from-orange-50 to-orange-100 shadow-lg shadow-orange-200/50'
-                    : 'border-gray-200 bg-white hover:border-orange-300'
-                }`}
-                onClick={openCustomBudgetModal}
-              >
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                    </svg>
-                  </div>
-                  <h3 className="font-bold text-lg text-orange-700 mb-1">自定义</h3>
-                  <p className="text-2xl font-bold text-orange-600 mb-2">
-                    {![
-                      { min: 1000, max: 3000 },
-                      { min: 3000, max: 8000 },
-                      { min: 8000, max: 20000 }
-                    ].some(preset => preset.min === budgetRange.min && preset.max === budgetRange.max)
-                      ? `${formatBudget(budgetRange.min)}-${formatBudget(budgetRange.max)}`
-                      : '？？？-？？？'
-                    }
-                  </p>
-                  <p className="text-sm text-gray-600">点击设置专属预算</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 当前选择显示 */}
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <TravelCreditCardIcon />
-                  <div>
-                    <h4 className="font-semibold text-gray-800">当前预算范围</h4>
-                    <p className="text-sm text-gray-600">为您推荐最合适的方案</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {formatBudget(budgetRange.min)} - {formatBudget(budgetRange.max)}
-                  </p>
-                  <p className="text-sm text-gray-500">人均预算</p>
-                </div>
-              </div>
-            </div>
-
-            {/* 预算建议提示 */}
-            <div className="bg-blue-50 p-4 rounded-xl border border-blue-200">
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-blue-800 mb-1">💡 预算小贴士</h4>
-                  <p className="text-sm text-blue-700">
-                    预算包含交通、住宿、餐饮、门票等费用。我们会根据您的预算为您推荐最优性价比的方案。
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-8">
-            <div className="text-center space-y-2 mb-8">
               <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                 个性化定制
               </h2>
@@ -714,76 +498,6 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 自定义预算模态框 */}
-      <Modal
-        open={showCustomBudgetModal}
-        onClose={() => setShowCustomBudgetModal(false)}
-        title="设置自定义预算"
-      >
-        <div className="space-y-6">
-          <div className="text-sm text-gray-600 mb-4">
-            请设置您的预算范围，我们会根据您的预算推荐最合适的旅行方案。
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                最低预算（元）
-              </label>
-              <Input
-                value={customMinBudget}
-                onChange={(e) => setCustomMinBudget(e.target.value)}
-                placeholder="例如：2000"
-                type="number"
-                min="0"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                最高预算（元）
-              </label>
-              <Input
-                value={customMaxBudget}
-                onChange={(e) => setCustomMaxBudget(e.target.value)}
-                placeholder="例如：8000"
-                type="number"
-                min="0"
-              />
-            </div>
-          </div>
-          
-          {customMinBudget && customMaxBudget && (
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <div className="flex items-center space-x-2">
-                <TravelCreditCardIcon />
-                <div>
-                  <p className="font-medium text-orange-800">预算预览</p>
-                  <p className="text-orange-600">
-                    {formatBudget(parseInt(customMinBudget) || 0)} - {formatBudget(parseInt(customMaxBudget) || 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              variant="secondary"
-              onClick={() => setShowCustomBudgetModal(false)}
-            >
-              取消
-            </Button>
-            <Button
-              onClick={handleCustomBudgetSubmit}
-              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-            >
-              确认设置
-            </Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 };
