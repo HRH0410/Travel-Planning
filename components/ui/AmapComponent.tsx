@@ -360,7 +360,19 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
               console.log('当前城市:', info);
               // 强制刷新建筑图层
               mapInstance.setFeatures(['bg', 'point', 'road', 'building']);
-              mapInstance.refresh();
+              // 高德地图 API 2.1Beta 中没有 refresh 方法，改用其他方式强制重新渲染
+              try {
+                // 尝试使用 render 方法重新渲染
+                if (typeof mapInstance.render === 'function') {
+                  mapInstance.render();
+                } else {
+                  // 如果没有 render 方法，通过轻微改变缩放级别来触发重新渲染
+                  const currentZoom = mapInstance.getZoom();
+                  mapInstance.setZoom(currentZoom);
+                }
+              } catch (renderError) {
+                console.warn('地图重新渲染失败:', renderError);
+              }
             });
           } catch (error) {
             console.warn('获取城市信息失败:', error);
@@ -454,7 +466,17 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
               mapInstance.setRotation(15); // 稍微旋转增加立体感
               
               // 强制重新渲染
-              mapInstance.refresh();
+              try {
+                if (typeof mapInstance.render === 'function') {
+                  mapInstance.render();
+                } else {
+                  // 通过轻微改变缩放级别来触发重新渲染
+                  const currentZoom = mapInstance.getZoom();
+                  mapInstance.setZoom(currentZoom);
+                }
+              } catch (renderError) {
+                console.warn('地图重新渲染失败:', renderError);
+              }
               console.log('✅ 3D视角设置完成');
             } catch (error) {
               console.warn('设置3D视角失败:', error);

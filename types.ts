@@ -106,21 +106,3 @@ export enum AppView {
   DemandInput = 'DemandInput',
   Planning = 'Planning',
 }
-
-// For Gemini Service
-export interface GeminiRequest {
-  model: string;
-  contents: string | { parts: Array<{text?: string, inlineData?: {mimeType: string, data: string}}> };
-  config?: GeminiModelConfig;
-}
-
-export interface GeminiModelConfig {
-  systemInstruction?: string;
-  topK?: number;
-  topP?: number;
-  temperature?: number;
-  responseMimeType?: string;
-  seed?: number;
-  thinkingConfig?: { thinkingBudget: number };
-  tools?: Array<{googleSearch: Record<string, unknown>}>;
-}

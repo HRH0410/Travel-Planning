@@ -1,12 +1,7 @@
-
-export const GEMINI_TEXT_MODEL = 'gemini-2.0-flash';
-export const GEMINI_IMAGE_MODEL = 'imagen-3.0-generate-002';
-
 export const APP_NAME = "智游无界";
 export const APP_SLOGAN = "基于大模型的个性化智能旅行规划助手";
 export const PLAN_MY_TRIP_BUTTON = "规划我的旅行";
 
-export const MOCK_TASK_ID_PREFIX = "task_";
 export const POLLING_INTERVAL = 2000; // 2 seconds - 更快的轮询用于测试
 
 // 高德地图配置
@@ -23,4 +18,13 @@ export const DEFAULT_MAP_CENTER = {
   longitude: 116.397428,
   latitude: 39.90923
 };
-export const MAX_POLLS = 30; // Max 60 seconds of polling - 更长的轮询时间
+export const MAX_POLLS = 120; // Max 60 seconds of polling - 更长的轮询时间
+
+// 后端API配置
+export const BACKEND_CONFIG = {
+  BASE_URL: 'http://localhost:8081', // Python Flask服务器地址
+  ENDPOINTS: {
+    START_PLAN: '/plan/start',
+    GET_RESULT: '/plan/result'
+  }
+};
