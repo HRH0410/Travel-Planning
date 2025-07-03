@@ -27,37 +27,34 @@ export const SkeletonLoader: React.FC<{className?: string}> = ({ className }) =>
 };
 
 // 旅行规划专用加载组件
-export const TravelPlanningLoader: React.FC<{ message?: string }> = ({ message }) => {
+export const TravelPlanningLoader: React.FC<{ 
+  message?: string;
+  elapsedTime?: number; // 已等待时间（秒）
+  estimatedTime?: number; // 预计总等待时间（秒）
+}> = ({ message, elapsedTime = 0, estimatedTime = 90 }) => {
   const { isElderMode } = useElderModeContext();
-  const [progress, setProgress] = React.useState(0);
   const [currentStep, setCurrentStep] = React.useState(0);
+  
+  // 格式化时间显示
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return mins > 0 ? `${mins}分${secs}秒` : `${secs}秒`;
+  };
   
   const steps = [
     { label: '分析需求', icon: '🎯', color: 'from-blue-500 to-cyan-500' },
     { label: '匹配景点', icon: '🏛️', color: 'from-purple-500 to-pink-500' },
     { label: '优化路线', icon: '🗺️', color: 'from-pink-500 to-rose-500' },
     { label: '生成行程', icon: '📋', color: 'from-orange-500 to-yellow-500' }
-  ];
-
+  ];  
   React.useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          return 100;
-        }
-        // 模拟真实的加载过程，前期快速增长，后期缓慢
-        const increment = prev < 30 ? 2 : prev < 60 ? 1.5 : prev < 90 ? 1 : 0.5;
-        return Math.min(prev + increment, 100);
-      });
-    }, 200);
-
     // 步骤切换逻辑
     const stepInterval = setInterval(() => {
       setCurrentStep(prev => (prev + 1) % steps.length);
     }, 3000);
 
     return () => {
-      clearInterval(interval);
       clearInterval(stepInterval);
     };
   }, []);
@@ -70,36 +67,11 @@ export const TravelPlanningLoader: React.FC<{ message?: string }> = ({ message }
           {/* 极简大号加载动画 */}
           <div className="mb-16">
             <div className="w-32 h-32 mx-auto relative">
-              {/* 大粗进度环 */}
-              <div className="absolute inset-0 rounded-full">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 128 128">
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="#e2e8f0"
-                    strokeWidth="12"
-                    fill="none"
-                  />
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="#3b82f6"
-                    strokeWidth="12"
-                    fill="none"
-                    strokeDasharray={`${(progress / 100) * 352} 352`}
-                    strokeLinecap="round"
-                    className="transition-all duration-700 ease-out"
-                  />
-                </svg>
-              </div>
-              
-              {/* 中心图标 */}
+              {/* 简单的旋转动画图标 */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                  <svg className="w-10 h-10 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a7.646 7.646 0 005.416 2.232c.41-.18.953-.14 1.316.22.364.364.4.907.22 1.317A7.647 7.647 0 0016.72 12a7.647 7.647 0 002.232 5.416c.18.41.144.953-.22 1.316-.364.364-.907.4-1.317.22A7.647 7.647 0 0012 16.72a7.647 7.647 0 00-5.416 2.232c-.41.18-.953.144-1.316-.22-.364-.364-.4-.907-.22-1.317A7.647 7.647 0 007.28 12a7.647 7.647 0 00-2.232-5.416c-.18-.41-.144-.953.22-1.316.364-.364.907-.4 1.317-.22A7.647 7.647 0 0012 7.28z" />
                   </svg>
                 </div>
               </div>
@@ -117,17 +89,16 @@ export const TravelPlanningLoader: React.FC<{ message?: string }> = ({ message }
               {message || '请稍候片刻'}
             </p>
             
-            {/* 大号进度指示 */}
+            {/* 大号等待时间指示 */}
             <div className="space-y-6">
-              <div className="w-full h-6 bg-gray-200 rounded-full overflow-hidden shadow-inner">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-700 ease-out shadow-sm" 
-                  style={{ width: `${progress}%` }}
-                />
+              <div className="space-y-2">
+                <p className="text-2xl font-bold text-blue-600">
+                  已等待：{formatTime(elapsedTime)}
+                </p>
+                <p className="text-xl text-gray-600">
+                  预计还需：{formatTime(Math.max(0, estimatedTime - elapsedTime))}
+                </p>
               </div>
-              <p className="text-3xl font-bold text-blue-600">
-                {Math.round(progress)}%
-              </p>
             </div>
           </div>
         </div>
@@ -233,31 +204,6 @@ export const TravelPlanningLoader: React.FC<{ message?: string }> = ({ message }
                 
                 {/* 脉冲波纹 */}
                 <div className="absolute inset-0 rounded-full bg-white/20 animate-ping" style={{ animationDuration: '3s' }}></div>
-                
-                {/* 进度环 */}
-                <div className="absolute inset-0 rounded-full">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 80 80">
-                    <circle
-                      cx="40"
-                      cy="40"
-                      r="35"
-                      stroke="rgba(255,255,255,0.2)"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <circle
-                      cx="40"
-                      cy="40"
-                      r="35"
-                      stroke="rgba(255,255,255,0.8)"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeDasharray={`${(progress / 100) * 220} 220`}
-                      strokeLinecap="round"
-                      className="transition-all duration-500 ease-out"
-                    />
-                  </svg>
-                </div>
               </div>
             </div>
             
@@ -288,15 +234,15 @@ export const TravelPlanningLoader: React.FC<{ message?: string }> = ({ message }
           </div>
           
           <p className="text-xl text-gray-600 font-medium animate-pulse" style={{ animationDelay: '0.5s' }}>
-            {progress < 25 ? '正在分析您的需求...' : 
-             progress < 50 ? '正在匹配最佳景点...' :
-             progress < 75 ? '正在优化旅行路线...' :
-             progress < 95 ? '正在生成行程安排...' :
+            {elapsedTime < estimatedTime * 0.25 ? '正在分析您的需求...' : 
+             elapsedTime < estimatedTime * 0.5 ? '正在匹配最佳景点...' :
+             elapsedTime < estimatedTime * 0.75 ? '正在优化旅行路线...' :
+             elapsedTime < estimatedTime * 0.95 ? '正在生成行程安排...' :
              '即将完成规划...'}
           </p>
           <p className="text-base text-gray-500 animate-pulse" style={{ animationDelay: '1s' }}>
-            {progress < 50 ? '这可能需要一点时间，请耐心等待...' : 
-             progress < 90 ? '马上就好，正在做最后的优化...' :
+            {elapsedTime < estimatedTime * 0.5 ? '这可能需要一点时间，请耐心等待...' : 
+             elapsedTime < estimatedTime * 0.9 ? '马上就好，正在做最后的优化...' :
              '很快就能看到您的专属行程了！'}
           </p>
         </div>
@@ -328,33 +274,17 @@ export const TravelPlanningLoader: React.FC<{ message?: string }> = ({ message }
             ))}
           </div>
           
-          {/* 精美进度条 */}
-          <div className="w-80 h-3 bg-gray-200/50 backdrop-blur-sm rounded-full overflow-hidden mx-auto relative shadow-inner">
-            {/* 背景光效 */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-            
-            {/* 主进度条 */}
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full relative overflow-hidden shadow-lg transition-all duration-500 ease-out" 
-              style={{ width: `${progress}%` }}
-            >
-              {/* 进度条内光效 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent animate-pulse"></div>
-              
-              {/* 移动光点 */}
-              <div className="absolute top-0 right-0 w-6 h-full bg-gradient-to-r from-transparent via-white/60 to-transparent animate-pulse transform translate-x-2" style={{ animationDuration: '1.5s' }}></div>
-            </div>
-            
-            {/* 进度条边框高光 */}
-            <div className="absolute inset-0 rounded-full border border-white/30"></div>
-          </div>
-          
-          {/* 进度百分比 */}
+          {/* 等待时间显示 */}
           <div className="text-center">
-            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
-              {Math.round(progress)}%
-            </span>
-            <p className="text-sm text-gray-500 mt-1">正在处理中...</p>
+            <div className="space-y-2">
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
+                已等待：{formatTime(elapsedTime)}
+              </span>
+              <p className="text-lg text-gray-600">
+                预计还需：{formatTime(Math.max(0, estimatedTime - elapsedTime))}
+              </p>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">正在处理中...</p>
           </div>
         </div>
 

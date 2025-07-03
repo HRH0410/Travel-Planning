@@ -70,7 +70,8 @@ const travelTypesData = [
     description: '慢节奏，放松身心', 
     icon: <TravelBeachIcon />, 
     color: 'blue' as const,
-    prompt: '请为我安排一个放松舒适的旅行，节奏要慢，重点关注休闲度假、温泉疗养等能让身心得到充分放松的活动和场所'
+    prompt: ''
+    // prompt: '请为我安排一个放松舒适的旅行，节奏要慢，重点关注休闲度假、温泉疗养等能让身心得到充分放松的活动和场所'
   },
   { 
     id: 'adventure', 
@@ -78,7 +79,8 @@ const travelTypesData = [
     description: '征服自然的精彩旅程', 
     icon: <TravelMountainIcon />, 
     color: 'green' as const,
-    prompt: '请为我规划一个充满冒险精神的旅行，包含户外探险、登山徒步、极限运动等挑战性活动，让我能够征服自然、挑战自我'
+    prompt: ''
+    // prompt: '请为我规划一个充满冒险精神的旅行，包含户外探险、登山徒步、极限运动等挑战性活动，让我能够征服自然、挑战自我'
   },
   { 
     id: 'cultural', 
@@ -86,7 +88,8 @@ const travelTypesData = [
     description: '历史与人文的深度沉浸', 
     icon: <TravelCityIcon />, 
     color: 'purple' as const,
-    prompt: '请为我安排一个深度的文化体验之旅，重点包含历史古迹、博物馆、传统文化体验、当地民俗活动等，让我能够深入了解当地的历史文化底蕴'
+    prompt: ''
+    // prompt: '请为我安排一个深度的文化体验之旅，重点包含历史古迹、博物馆、传统文化体验、当地民俗活动等，让我能够深入了解当地的历史文化底蕴'
   },
   { 
     id: 'redtour', 
@@ -94,6 +97,7 @@ const travelTypesData = [
     description: '走进历史现场，聆听信仰的回声', 
     icon: <RedFlagIcon />, 
     color: 'red' as const,
+    // prompt: ''
     prompt: '请为我规划一个红色文化主题的旅行，重点参观革命历史遗址、纪念馆、红色教育基地等，让我能够重温历史、传承红色精神'
   },
   { 

@@ -42,6 +42,7 @@ const PlanningPageWrapper: React.FC = () => {
   const [isModifyingPlan, setIsModifyingPlan] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [pollCount, setPollCount] = useState<number>(0);
+  const [startTime] = useState<number>(Date.now());
 
   const handleModifyPlan = useCallback(async (_modificationRequest: string) => {
     if (!taskId || !currentPlan) return;
@@ -56,6 +57,22 @@ const PlanningPageWrapper: React.FC = () => {
       setIsModifyingPlan(false);
     }
   }, [taskId, currentPlan]);
+
+  // 计算预期等待时间（1.5分钟 * 天数）
+  const calculateEstimatedTime = (demand?: UserDemand): number => {
+    if (!demand?.duration) return 90; // 默认90秒
+    
+    // 从duration字符串中提取天数
+    const durationMatch = demand.duration.match(/(\d+)/);
+    const days = durationMatch ? parseInt(durationMatch[1]) : 1;
+    
+    return days * 90; // 90秒 = 1.5分钟
+  };
+
+  const estimatedTime = React.useMemo(() => 
+    calculateEstimatedTime(state?.demand), 
+    [state?.demand]
+  );
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -139,6 +156,8 @@ const PlanningPageWrapper: React.FC = () => {
       error={error}
       onModifyPlan={handleModifyPlan}
       isModifying={isModifyingPlan}
+      elapsedTime={Math.floor((Date.now() - startTime) / 1000)}
+      estimatedTime={estimatedTime}
     />
   );
 };

@@ -30,7 +30,7 @@ const convertBackendResultToTravelPlan = (backendResult: any, demand: UserDemand
     durationDays: plan.itinerary?.length || 0,
     numberOfPeople: plan.people_number,
     budget: parseFloat(demand.budget?.split('-')[0]) || 5000,
-    currency: 'CNY',
+    currency: '¥',
     dailyPlans: [],
     totalEstimatedCost: 0,
     pois: []

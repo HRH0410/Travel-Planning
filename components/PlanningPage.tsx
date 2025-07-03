@@ -178,10 +178,7 @@ const TransportChain: React.FC<TransportChainProps> = ({ activity, displayCurren
                   )}
                   {totalCost > 0 && (
                     <div className="flex items-center gap-1">
-                      <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                      <span className="text-green-600 font-medium text-sm">{totalCost} {displayCurrency}</span>
+                      <span className="text-green-600 font-medium text-sm">{displayCurrency} {totalCost}</span>
                     </div>
                   )}
                 </div>
@@ -219,7 +216,7 @@ const TransportChain: React.FC<TransportChainProps> = ({ activity, displayCurren
                           </span>
                         </div>
                         {transport.cost && transport.cost > 0 && (
-                          <span className="text-green-600 font-medium text-sm">{transport.cost}{displayCurrency}</span>
+                          <span className="text-green-600 font-medium text-sm">{displayCurrency} {transport.cost}</span>
                         )}
                       </div>
                       
@@ -284,10 +281,7 @@ const TransportChain: React.FC<TransportChainProps> = ({ activity, displayCurren
                 )}
                 {totalCost > 0 && (
                   <div className="flex items-center gap-1 text-sm">
-                    <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                    <span className="text-green-600 font-medium">总花费: {totalCost} {displayCurrency}</span>
+                    <span className="text-green-600 font-medium">总花费: {displayCurrency} {totalCost}</span>
                   </div>
                 )}
               </div>
@@ -425,7 +419,7 @@ const TravelTimeline: React.FC<TravelTimelineProps> = ({
                     {activity.position || '未知位置'}
                   </div>
                   {activity.notes && <div className={`text-gray-600 truncate ${isMobile ? 'text-sm mb-1' : 'text-xs sm:text-sm'}`}>{activity.notes}</div>}
-                  {activity.cost && activity.cost > 0 && <div className={`font-medium text-green-600 ${isMobile ? 'text-sm' : 'text-xs sm:text-sm'}`}>花费：{activity.cost} {displayCurrency}</div>}
+                  {activity.cost && activity.cost > 0 && <div className={`font-medium text-green-600 ${isMobile ? 'text-sm' : 'text-xs sm:text-sm'}`}>花费：{displayCurrency} {activity.cost}</div>}
                 </div>
               </div>
             )}
@@ -578,9 +572,6 @@ const TravelTimeline: React.FC<TravelTimelineProps> = ({
                         {/* 费用总计 */}
                         {activity.cost && activity.cost > 0 && (
                           <div className="flex items-center gap-1 bg-green-50 p-2 rounded">
-                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                            </svg>
                             <span className="text-xs font-medium text-green-700">总花费：{activity.cost} {displayCurrency}</span>
                           </div>
                         )}
@@ -608,7 +599,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({
   selectedActivityId,
   onActivityClick
 }) => {
-  const displayCurrency = currency || '元';
+  const displayCurrency = currency || '¥';
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   useEffect(() => {
@@ -1271,9 +1262,19 @@ interface PlanningPageProps {
   error: string | null;
   onModifyPlan: (modificationRequest: string) => void;
   isModifying: boolean;
+  elapsedTime?: number;
+  estimatedTime?: number;
 }
 
-export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, error, onModifyPlan, isModifying }) => {
+export const PlanningPage: React.FC<PlanningPageProps> = ({ 
+  plan, 
+  isLoading, 
+  error, 
+  onModifyPlan, 
+  isModifying, 
+  elapsedTime = 0, 
+  estimatedTime = 90 
+}) => {
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [leftWidth, setLeftWidth] = useState(380); // px, 默认左侧宽度
   const [showGlobalModal, setShowGlobalModal] = useState(false);
@@ -1349,7 +1350,11 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
 
   if (isLoading && !currentPlan) {
     return (
-      <TravelPlanningLoader message="正在生成您的个性化行程..." />
+      <TravelPlanningLoader 
+        message="正在生成您的个性化行程..." 
+        elapsedTime={elapsedTime}
+        estimatedTime={estimatedTime}
+      />
     );
   }
 
@@ -1378,7 +1383,7 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   
   return (
-    <div className={`${isMobile ? 'min-h-screen overflow-y-auto' : 'h-screen overflow-hidden'} flex flex-col bg-gray-100 p-4 md:p-6 lg:p-8`} 
+    <div className={`${isMobile ? 'min-h-screen overflow-y-auto' : 'h-[calc(100vh-64px)] overflow-hidden'} flex flex-col bg-gray-100 pl-8 pr-8 pt-8`} 
          style={isMobile ? {
            WebkitOverflowScrolling: 'touch', // iOS 平滑滚动
            overscrollBehavior: 'contain', // 防止过度滚动
@@ -1388,9 +1393,8 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
           {currentPlan.title || `${currentPlan.destination}之旅`}
         </h1>
         <p className="text-lg text-gray-600">
-          {currentPlan.durationDays}天，{currentPlan.numberOfPeople}人。
-          {currentPlan.budget && ` 预算：${currentPlan.budget} ${displayCurrency}。`}
-          {totalCost > 0 && ` 预计总花费：${totalCost.toFixed(2)} ${displayCurrency}`}
+          {currentPlan.durationDays}天，{currentPlan.numberOfPeople}人
+          {totalCost > 0 && `，预计总花费：${totalCost.toFixed(2)} ${displayCurrency}`}
         </p>
         {isUpdatingCoordinates && (
           <p className="text-sm text-blue-600 mt-2 flex items-center gap-2">
@@ -1399,7 +1403,7 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({ plan, isLoading, err
           </p>
         )}
       </header>
-      <div className={`${isMobile ? 'flex flex-col space-y-6' : 'flex-1 w-full flex flex-col lg:flex-row relative min-h-0 pb-6'}`}>
+      <div className={`${isMobile ? 'flex flex-col space-y-6' : 'flex-1 w-full flex flex-col lg:flex-row relative min-h-0'}`}>
         {/* 左侧：行程 */}
         {!isLeftCollapsed && (
           <div

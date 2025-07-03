@@ -2,7 +2,7 @@ export const APP_NAME = "智游无界";
 export const APP_SLOGAN = "基于大模型的个性化智能旅行规划助手";
 export const PLAN_MY_TRIP_BUTTON = "规划我的旅行";
 
-export const POLLING_INTERVAL = 2000; // 2 seconds - 更快的轮询用于测试
+export const POLLING_INTERVAL = 1000; // 1 second - 更快的轮询用于测试
 
 // 高德地图配置
 export const AMAP_CONFIG = {
