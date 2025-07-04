@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from './ui/Button';
-import { Input, TextArea } from './ui/Input';
+import { TextArea } from './ui/Input';
 import { Slider } from './ui/Slider';
 import { SelectionCard, SelectionGrid } from './ui/Selection';
 import { UserDemand } from '../types';
-import { APP_NAME } from '../constants';
+import { APP_NAME, CITIES } from '../constants';
 import { useElderModeContext } from './ElderModeContext';
+import { Select } from './ui/Select';
 
 
 interface DemandInputPageProps {
@@ -137,8 +138,7 @@ const ElderDemandInputPage: React.FC<DemandInputPageProps> = ({ onSubmitDemand, 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* 出发城市 */}
+        <form onSubmit={handleSubmit}>
           <div>
             <h2 className="text-4xl font-bold text-blue-600 mb-4">出发城市</h2>
             <input
@@ -378,21 +378,23 @@ export const NewDemandInputPage: React.FC<DemandInputPageProps> = ({
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
+              <Select
                 label="出发城市"
+                options={CITIES.map(city => ({ value: city, label: city }))}
                 value={demand.startCity}
-                onChange={(e) => handleInputChange('startCity', e.target.value)}
-                placeholder="请输入出发城市"
+                onChange={(value) => handleInputChange('startCity', value)}
+                placeholder=""
                 icon={<TravelMapPinIcon />}
                 floatingLabel
                 error={errors.startCity}
                 className="bg-white/90 backdrop-blur-md shadow-md border border-white/50"
               />
-              <Input
+              <Select
                 label="目的地"
+                options={CITIES.map(city => ({ value: city, label: city }))}
                 value={demand.destination}
-                onChange={(e) => handleInputChange('destination', e.target.value)}
-                placeholder="请输入目的地"
+                onChange={(value) => handleInputChange('destination', value)}
+                placeholder=""
                 icon={<TravelMapPinIcon />}
                 floatingLabel
                 error={errors.destination}

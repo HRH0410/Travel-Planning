@@ -20,6 +20,12 @@ export const DEFAULT_MAP_CENTER = {
 };
 export const MAX_POLLS = 120; // Max 60 seconds of polling - 更长的轮询时间
 
+// 城市配置
+export const CITIES = [
+  "上海", "北京", "深圳", "广州", "重庆",
+  "苏州", "成都", "杭州", "武汉", "南京"
+];
+
 // 后端API配置
 export const BACKEND_CONFIG = {
   BASE_URL: 'http://localhost:8082', // Python Flask服务器地址
