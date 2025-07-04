@@ -78,11 +78,11 @@ export const Slider: React.FC<SliderProps> = ({
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
           {icon && (
-            <div className="text-gray-600 dark:text-gray-400">
+            <div className="text-gray-600">
               {icon}
             </div>
           )}
-          <label className="text-base font-semibold text-gray-700 dark:text-gray-300">
+          <label className="text-base font-semibold text-gray-700">
             {label}
           </label>
         </div>
@@ -95,7 +95,7 @@ export const Slider: React.FC<SliderProps> = ({
       {/* Slider Container */}
       <div className="relative group">
         {/* Track */}
-        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner">
           {/* Progress */}
           <div
             className={`h-full bg-gradient-to-r ${currentColor.bg} transition-all duration-300 ease-out shadow-lg ${currentColor.glow}`}
@@ -141,7 +141,7 @@ export const Slider: React.FC<SliderProps> = ({
         </div>
 
         {/* Tick Marks */}
-        <div className="absolute top-full mt-2 w-full flex justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="absolute top-full mt-2 w-full flex justify-between text-xs text-gray-500">
           <span>{min}{unit}</span>
           <span>{max}{unit}</span>
         </div>
@@ -256,11 +256,11 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
           {icon && (
-            <div className="text-gray-600 dark:text-gray-400">
+            <div className="text-gray-600">
               {icon}
             </div>
           )}
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="text-sm font-medium text-gray-700">
             {label}
           </label>
         </div>
@@ -268,7 +268,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
           <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${currentColor.bg} text-white text-sm font-medium shadow-lg ${currentColor.shadow}`}>
             {formatValue ? formatValue(tempMin) : `${tempMin}${unit}`}
           </div>
-          <span className="text-gray-500 dark:text-gray-400">-</span>
+          <span className="text-gray-500">-</span>
           <div className={`px-3 py-1 rounded-full bg-gradient-to-r ${currentColor.bg} text-white text-sm font-medium shadow-lg ${currentColor.shadow}`}>
             {formatValue ? formatValue(tempMax) : `${tempMax}${unit}`}
           </div>
@@ -278,7 +278,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
       {/* Slider Container */}
       <div className="relative group">
         {/* Track */}
-        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden shadow-inner">
           {/* Progress */}
           <div
             className={`absolute h-full bg-gradient-to-r ${currentColor.bg} transition-all duration-300 ease-out shadow-lg ${currentColor.glow}`}
@@ -352,7 +352,7 @@ export const RangeSlider: React.FC<RangeSliderProps> = ({
         </div>
 
         {/* Tick Marks */}
-        <div className="absolute top-full mt-2 w-full flex justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="absolute top-full mt-2 w-full flex justify-between text-xs text-gray-500">
           <span>{min}{unit}</span>
           <span>{max}{unit}</span>
         </div>

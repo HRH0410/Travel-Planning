@@ -28,10 +28,11 @@ export const CITIES = [
 
 // 后端API配置
 export const BACKEND_CONFIG = {
-  BASE_URL: 'http://localhost:8082', // Python Flask服务器地址
+  BASE_URL: 'http://139.224.213.196:8082', // Python Flask服务器地址
   ENDPOINTS: {
     START_PLAN: '/plan/start',
     GET_RESULT: '/plan/result',
-    GEO_CODING: '/geocoding'
+    GEO_CODING: '/geocoding',
+    BATCH_GEO_CODING: '/geocoding/batch'
   }
 };

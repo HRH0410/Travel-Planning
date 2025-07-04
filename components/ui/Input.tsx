@@ -101,7 +101,7 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
           {label}
         </label>
       )}
@@ -235,7 +235,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
           {label}
         </label>
       )}

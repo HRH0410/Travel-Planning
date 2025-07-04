@@ -6,6 +6,20 @@ export interface GeocodingResult {
   formattedAddress?: string;
 }
 
+// 批量地理编码请求接口
+export interface BatchGeocodingRequest {
+  address: string;
+  city?: string;
+}
+
+// 批量地理编码结果接口
+export interface BatchGeocodingResult {
+  address: string;
+  longitude: number;
+  latitude: number;
+  formattedAddress?: string;
+  success: boolean;
+}
 
 // 调用后端地理编码服务
 export const geocodeAddress = async (address: string): Promise<GeocodingResult | null> => {
@@ -41,6 +55,53 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult |
   } catch (error) {
     console.error(`地理编码请求失败 (${address}):`, error);
     return null;
+  }
+};
+
+// 调用后端批量地理编码服务
+export const batchGeocodeAddresses = async (requests: BatchGeocodingRequest[]): Promise<BatchGeocodingResult[]> => {
+  if (!requests || requests.length === 0) {
+    console.warn('批量地理编码请求为空');
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${BACKEND_CONFIG.BASE_URL}${BACKEND_CONFIG.ENDPOINTS.BATCH_GEO_CODING}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requests)
+    });
+
+    if (response.ok) {
+      const results = await response.json();
+      if (Array.isArray(results)) {
+        return results.map(result => ({
+          address: result.address,
+          longitude: result.longitude || 0,
+          latitude: result.latitude || 0,
+          formattedAddress: result.formatted_address,
+          success: !!result.success
+        }));
+      }
+    }
+    
+    console.warn('批量地理编码请求失败');
+    return requests.map(req => ({
+      address: req.address,
+      longitude: 0,
+      latitude: 0,
+      success: false
+    }));
+  } catch (error) {
+    console.error('批量地理编码请求异常:', error);
+    return requests.map(req => ({
+      address: req.address,
+      longitude: 0,
+      latitude: 0,
+      success: false
+    }));
   }
 };
 
@@ -150,6 +211,118 @@ export const updateTravelPlanCoordinates = async (plan: any): Promise<any> => {
       console.log(`已保存更新的坐标到localStorage: ${updatedPlan.taskId}`);
     } catch (error) {
       console.warn('无法保存更新的计划到localStorage:', error);
+    }
+  }
+
+  return updatedPlan;
+};
+
+// 从旅行计划中收集所有需要地理编码的地址
+export const collectGeocodingRequests = (plan: any): BatchGeocodingRequest[] => {
+  const requests: BatchGeocodingRequest[] = [];
+  const addressSet = new Set<string>(); // 避免重复地址
+
+  // 收集每日活动中的地址
+  if (plan.dailyPlans && Array.isArray(plan.dailyPlans)) {
+    for (const dailyPlan of plan.dailyPlans) {
+      if (dailyPlan.activities && Array.isArray(dailyPlan.activities)) {
+        for (const activity of dailyPlan.activities) {
+          // 只收集没有有效坐标的活动
+          if (activity.position && 
+              !isValidCoordinate(activity.longitude || 0, activity.latitude || 0)) {
+            const cleanName = extractLocationName(activity.position);
+            if (cleanName && !addressSet.has(cleanName)) {
+              addressSet.add(cleanName);
+              requests.push({
+                address: cleanName,
+                city: plan.destination // 使用目的地城市作为上下文
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 收集POI中的地址
+  if (plan.pois && Array.isArray(plan.pois)) {
+    for (const poi of plan.pois) {
+      if (poi.name && 
+          !isValidCoordinate(poi.longitude || 0, poi.latitude || 0)) {
+        const cleanName = extractLocationName(poi.name);
+        if (cleanName && !addressSet.has(cleanName)) {
+          addressSet.add(cleanName);
+          requests.push({
+            address: cleanName,
+            city: plan.destination
+          });
+        }
+      }
+    }
+  }
+
+  return requests;
+};
+
+// 应用批量地理编码结果到旅行计划
+export const applyGeocodingResults = (plan: any, results: BatchGeocodingResult[]): any => {
+  const updatedPlan = { ...plan };
+  const resultsMap = new Map<string, BatchGeocodingResult>();
+  
+  // 创建地址到结果的映射
+  results.forEach(result => {
+    if (result.success) {
+      resultsMap.set(result.address, result);
+    }
+  });
+
+  let hasUpdates = false;
+
+  // 更新每日活动的坐标
+  if (updatedPlan.dailyPlans && Array.isArray(updatedPlan.dailyPlans)) {
+    for (const dailyPlan of updatedPlan.dailyPlans) {
+      if (dailyPlan.activities && Array.isArray(dailyPlan.activities)) {
+        for (const activity of dailyPlan.activities) {
+          if (activity.position && 
+              !isValidCoordinate(activity.longitude || 0, activity.latitude || 0)) {
+            const cleanName = extractLocationName(activity.position);
+            const result = resultsMap.get(cleanName);
+            
+            if (result) {
+              activity.latitude = result.latitude;
+              activity.longitude = result.longitude;
+              activity.pose = {
+                latitude: result.latitude,
+                longitude: result.longitude
+              };
+              hasUpdates = true;
+              console.log(`应用地理编码结果: ${activity.position} -> (${result.longitude}, ${result.latitude})`);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 更新POI坐标
+  if (updatedPlan.pois && Array.isArray(updatedPlan.pois)) {
+    for (const poi of updatedPlan.pois) {
+      if (poi.name && 
+          !isValidCoordinate(poi.longitude || 0, poi.latitude || 0)) {
+        const cleanName = extractLocationName(poi.name);
+        const result = resultsMap.get(cleanName);
+        
+        if (result) {
+          poi.latitude = result.latitude;
+          poi.longitude = result.longitude;
+          poi.pose = {
+            latitude: result.latitude,
+            longitude: result.longitude
+          };
+          hasUpdates = true;
+          console.log(`应用POI地理编码结果: ${poi.name} -> (${result.longitude}, ${result.latitude})`);
+        }
+      }
     }
   }
 

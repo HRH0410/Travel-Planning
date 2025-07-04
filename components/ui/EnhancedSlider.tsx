@@ -106,7 +106,7 @@ export const EnhancedSlider: React.FC<EnhancedSliderProps> = ({
         </div>
         
         {/* Track */}
-        <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shadow-inner">
+        <div className="h-2.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
           {/* Progress */}
           <div
             className={`h-full bg-gradient-to-r ${currentColor.bg} transition-all duration-300 ease-out shadow-lg ${currentColor.glow}`}

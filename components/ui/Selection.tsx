@@ -164,11 +164,11 @@ export const SelectionGrid: React.FC<SelectionGridProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+        <h2 className="text-2xl font-bold text-gray-800">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             {subtitle}
           </p>
         )}
@@ -277,7 +277,7 @@ export const TagCloud: React.FC<TagCloudProps> = ({
   return (
     <div className={`space-y-3 ${className}`}>
       {title && (
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800">
           {title}
         </h3>
       )}

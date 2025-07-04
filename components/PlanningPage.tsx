@@ -684,13 +684,15 @@ interface MapViewProps {
   activeDay?: number;
   selectedActivityId?: string | null;
   onActivityClick?: (activityId: string | null) => void;
+  isLoadingGeocoding?: boolean;
 }
 
 const MapView: React.FC<MapViewProps> = ({ 
   dailyPlans,
   activeDay,
   selectedActivityId,
-  onActivityClick 
+  onActivityClick,
+  isLoadingGeocoding = false
 }) => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const [markers, setMarkers] = useState<Array<{
@@ -1096,11 +1098,13 @@ const MapView: React.FC<MapViewProps> = ({
   return (
     <div className="h-full relative">
       {/* 加载指示器 */}
-      {isLoadingCoordinates && (
+      {(isLoadingCoordinates || isLoadingGeocoding) && (
         <div className="absolute top-4 right-4 bg-white bg-opacity-90 rounded-lg shadow-lg p-2 z-20">
           <div className="flex items-center gap-2">
             <LoadingSpinner size="sm" />
-            <span className="text-sm text-gray-600">正在获取位置信息...</span>
+            <span className="text-sm text-gray-600">
+              {isLoadingGeocoding ? '正在获取地理位置...' : '正在获取位置信息...'}
+            </span>
           </div>
         </div>
       )}
@@ -1259,6 +1263,7 @@ const getActivityMapType = (activityType: string): 'attraction' | 'dining' | 'ac
 interface PlanningPageProps {
   plan: TravelPlan | null;
   isLoading: boolean;
+  isLoadingGeocoding?: boolean;
   error: string | null;
   onModifyPlan: (modificationRequest: string) => void;
   isModifying: boolean;
@@ -1269,6 +1274,7 @@ interface PlanningPageProps {
 export const PlanningPage: React.FC<PlanningPageProps> = ({ 
   plan, 
   isLoading, 
+  isLoadingGeocoding = false,
   error, 
   onModifyPlan, 
   isModifying, 
@@ -1520,6 +1526,7 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
                 activeDay={activeDay}
                 selectedActivityId={selectedActivityId}
                 onActivityClick={setSelectedActivityId}
+                isLoadingGeocoding={isLoadingGeocoding}
               />
             </div>
           </div>

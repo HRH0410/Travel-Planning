@@ -1,6 +1,6 @@
 import { UserDemand, TravelPlan, DailyPlan, Activity } from '../types';
 import { BACKEND_CONFIG } from '../constants';
-import { updateTravelPlanCoordinates } from './geocodingService';
+import { updateTravelPlanCoordinates, collectGeocodingRequests, batchGeocodeAddresses, applyGeocodingResults } from './geocodingService';
 
 // 将前端UserDemand转换为后端期望的格式
 const convertDemandToBackendFormat = (demand: UserDemand) => {
@@ -156,7 +156,7 @@ export const startBackendPlanningSession = async (demand: UserDemand): Promise<{
   }
 };
 
-// 获取规划结果
+// 获取规划结果（不包含地理编码）
 export const getBackendPlanningResult = async (taskId: string, demand: UserDemand): Promise<{ 
   success: boolean; 
   plan?: TravelPlan; 
@@ -190,14 +190,6 @@ export const getBackendPlanningResult = async (taskId: string, demand: UserDeman
     
     if (result.status === 'success' && result.result) {
       const plan = convertBackendResultToTravelPlan(result, demand, taskId);
-      
-      // 异步更新坐标信息，不阻塞返回
-      updateTravelPlanCoordinates(plan).then((updatedPlan) => {
-        console.log('坐标更新完成:', updatedPlan.taskId);
-      }).catch((error) => {
-        console.warn('坐标更新失败:', error);
-      });
-      
       return { success: true, plan };
     }
     
@@ -211,7 +203,7 @@ export const getBackendPlanningResult = async (taskId: string, demand: UserDeman
   }
 };
 
-// 获取规划结果并同步更新坐标信息
+// 获取规划结果并同步更新坐标信息（使用批量地理编码）
 export const getBackendPlanningResultWithCoordinates = async (taskId: string, demand: UserDemand): Promise<{ 
   success: boolean; 
   plan?: TravelPlan; 
