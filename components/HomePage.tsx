@@ -691,68 +691,122 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
         {/* 非核心内容 - 在老人模式下隐藏 */}
         {!isElderMode && (
           <>
-            {/* 现代化亮点展示面板 */}
+            {/* 产品优势对比展示面板 */}
             <div className={`w-full max-w-6xl mx-auto mb-12 px-4 transform transition-all duration-1000 ease-out delay-500 ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <div className="bg-gradient-to-br from-blue-50/80 via-purple-50/60 to-pink-50/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-white/40 shadow-2xl relative overflow-hidden">
+              <div className="bg-gradient-to-br from-slate-50/90 via-blue-50/80 to-indigo-50/90 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-white/50 shadow-2xl relative overflow-hidden">
                 {/* 背景装饰 */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-200/20 to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-200/20 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-blue-100/30 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-indigo-100/30 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-50/20 via-blue-50/20 to-cyan-50/20 rounded-full blur-3xl"></div>
                 
                 <div className="relative z-10">
-                  <div className="text-center mb-8">
-                    <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-                      为什么选择智游无界
+                  <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-700 via-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+                      重新定义旅行规划
                     </h2>
-                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                      领先的AI技术，为您带来前所未有的旅行规划体验
+                    <p className="text-slate-600 text-lg max-w-3xl mx-auto leading-relaxed">
+                      五大核心优势，超越传统旅行工具的新时代智能体验
                     </p>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                  <div className="space-y-8">
                     {[
                       {
+                        icon: "💬",
+                        title: "更语义理解的交互体验",
+                        description: "自然对话式需求输入",
+                        versus: "模板勾选的填表流程",
+                        color: "from-blue-500 to-cyan-500",
+                        bgColor: "from-blue-50 to-cyan-50"
+                      },
+                      {
                         icon: "🎯",
-                        title: "精准匹配",
-                        description: "AI深度理解需求",
-                        color: "from-blue-400 to-cyan-400"
+                        title: "更约束一致的规划能力", 
+                        description: "深度逻辑推理与需求匹配",
+                        versus: "灵感触发的浅层回应",
+                        color: "from-indigo-500 to-purple-500",
+                        bgColor: "from-indigo-50 to-purple-50"
+                      },
+                      {
+                        icon: "🏗️",
+                        title: "更结构驱动的内容生成",
+                        description: "系统化旅行知识体系输出",
+                        versus: "热榜驱动的模板拼贴",
+                        color: "from-purple-500 to-pink-500",
+                        bgColor: "from-purple-50 to-pink-50"
                       },
                       {
                         icon: "⚡",
-                        title: "秒速生成",
-                        description: "3秒完成行程规划",
-                        color: "from-purple-400 to-violet-400"
+                        title: "更实时响应的信息融合",
+                        description: "动态整合最新旅行数据",
+                        versus: "静态陈列的通用推荐",
+                        color: "from-emerald-500 to-teal-500",
+                        bgColor: "from-emerald-50 to-teal-50"
                       },
                       {
-                        icon: "🚩",
-                        title: "红色教育",
-                        description: "传承革命精神",
-                        color: "from-red-500 to-rose-500"
-                      },
-                      {
-                        icon: "🌟",
-                        title: "品质保证",
-                        description: "精选优质景点",
-                        color: "from-pink-400 to-rose-400"
-                      },
-                      {
-                        icon: "💎",
-                        title: "完全免费",
-                        description: "无隐藏费用",
-                        color: "from-emerald-400 to-teal-400"
+                        icon: "⚙️",
+                        title: "更原子精巧的旅行编排",
+                        description: "细粒度个性化行程设计",
+                        versus: "堆砌热点的流水行文",
+                        color: "from-orange-500 to-amber-500",
+                        bgColor: "from-orange-50 to-amber-50"
                       }
-                    ].map((feature, index) => (
+                    ].map((advantage, index) => (
                       <div
                         key={index}
-                        className="group relative bg-white/60 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/80 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border border-white/40"
+                        className="group relative"
+                        style={{ animationDelay: `${index * 100}ms` }}
                       >
-                        <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-xl flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                          {feature.icon}
+                        <div className={`bg-gradient-to-r ${advantage.bgColor} backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/60 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 overflow-hidden`}>
+                          {/* 背景动态效果 */}
+                          <div className={`absolute inset-0 bg-gradient-to-r ${advantage.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
+                          
+                          <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6">
+                            {/* 图标 */}
+                            <div className={`flex-shrink-0 w-16 h-16 bg-gradient-to-r ${advantage.color} rounded-xl flex items-center justify-center text-3xl shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                              {advantage.icon}
+                            </div>
+                            
+                            {/* 内容区域 */}
+                            <div className="flex-grow text-center md:text-left">
+                              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                {/* 左侧：我们的优势 */}
+                                <div className="flex-1">
+                                  <h3 className={`text-xl md:text-2xl font-bold mb-2 bg-gradient-to-r ${advantage.color} bg-clip-text text-transparent`}>
+                                    {advantage.title}
+                                  </h3>
+                                  <p className="text-slate-700 font-medium text-lg">
+                                    {advantage.description}
+                                  </p>
+                                </div>
+                                
+                                {/* 中间：VS 分隔符 */}
+                                <div className="flex-shrink-0 flex items-center justify-center">
+                                  <div className="relative">
+                                    <div className={`w-12 h-12 bg-gradient-to-r ${advantage.color} rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                      <span className="text-white font-bold text-sm">VS</span>
+                                    </div>
+                                    {/* 发光效果 */}
+                                    <div className={`absolute inset-0 bg-gradient-to-r ${advantage.color} rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300`}></div>
+                                  </div>
+                                </div>
+                                
+                                {/* 右侧：传统方式 */}
+                                <div className="flex-1">
+                                  <h4 className="text-lg font-semibold text-slate-500 mb-2 line-through decoration-2">
+                                    传统方式
+                                  </h4>
+                                  <p className="text-slate-400 italic">
+                                    {advantage.versus}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* 底部装饰线 */}
+                          <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${advantage.color} w-0 group-hover:w-full transition-all duration-700 ease-out`}></div>
                         </div>
-                        <h3 className="font-bold text-gray-800 mb-2 text-lg">{feature.title}</h3>
-                        <p className="text-gray-600 text-sm">{feature.description}</p>
-                        
-                        {/* 底部装饰条 */}
-                        <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.color} scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-b-2xl`}></div>
                       </div>
                     ))}
                   </div>
