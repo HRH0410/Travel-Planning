@@ -12,7 +12,6 @@ const DemandInputPageWrapper: React.FC = () => {
   useEffect(() => {
     const checkConnection = async () => {
       const isConnected = await checkBackendConnection();
-      console.log(`后端服务状态: ${isConnected ? '已连接' : '未连接'}`);
     };
     
     checkConnection();
@@ -30,7 +29,6 @@ const DemandInputPageWrapper: React.FC = () => {
     
     try {
       // 直接使用后端Python服务
-      console.log('使用后端服务启动规划会话...');
       const result = await startBackendPlanningSession(demand);
       const taskId = result.taskId;
       

@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { PlanningPage as OriginalPlanningPage } from './PlanningPage';
 import { UserDemand, TravelPlan } from '../types';
 import { getBackendPlanningResult } from '../services/backendService';
-import { collectGeocodingRequests, batchGeocodeAddresses, applyGeocodingResults } from '../services/geocodingService';
 import { POLLING_INTERVAL, MAX_POLLS } from '../constants';
 
 interface LocationState {
@@ -40,7 +39,6 @@ const PlanningPageWrapper: React.FC = () => {
   
   const [currentPlan, setCurrentPlan] = useState<TravelPlan | null>(null);
   const [isLoadingPlan, setIsLoadingPlan] = useState<boolean>(true);
-  const [isLoadingGeocoding, setIsLoadingGeocoding] = useState<boolean>(false);
   const [isModifyingPlan, setIsModifyingPlan] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [pollCount, setPollCount] = useState<number>(0);
@@ -59,45 +57,6 @@ const PlanningPageWrapper: React.FC = () => {
       setIsModifyingPlan(false);
     }
   }, [taskId, currentPlan]);
-
-  // 处理地理编码的函数
-  const handleGeocoding = useCallback(async (plan: TravelPlan) => {
-    try {
-      setIsLoadingGeocoding(true);
-      console.log('开始批量地理编码...');
-      
-      // 收集需要地理编码的地址
-      const requests = collectGeocodingRequests(plan);
-      console.log(`需要地理编码的地址数量: ${requests.length}`);
-      
-      if (requests.length > 0) {
-        // 发送批量地理编码请求
-        const results = await batchGeocodeAddresses(requests);
-        console.log('地理编码结果:', results);
-        
-        // 应用编码结果到计划
-        const updatedPlan = applyGeocodingResults(plan, results);
-        
-        // 更新计划状态
-        setCurrentPlan(updatedPlan);
-        
-        // 保存到localStorage
-        try {
-          const savedPlans = JSON.parse(localStorage.getItem('completedPlans') || '{}');
-          savedPlans[plan.taskId] = updatedPlan;
-          localStorage.setItem('completedPlans', JSON.stringify(savedPlans));
-          console.log(`已保存更新的计划到localStorage: ${plan.taskId}`);
-        } catch (error) {
-          console.warn('无法保存更新的计划到localStorage:', error);
-        }
-      }
-    } catch (error) {
-      console.error('地理编码失败:', error);
-      // 即使地理编码失败，也不影响计划显示
-    } finally {
-      setIsLoadingGeocoding(false);
-    }
-  }, []);
 
   // 计算预期等待时间（1.5分钟 * 天数）
   const calculateEstimatedTime = (demand?: UserDemand): number => {
@@ -139,13 +98,10 @@ const PlanningPageWrapper: React.FC = () => {
           const result = await getBackendPlanningResult(taskId, demandForPolling);
           
           if (result.success && result.plan) {
-            // 先设置计划，让用户看到列表
+            // 设置计划，让用户看到列表
             setCurrentPlan(result.plan);
             setIsLoadingPlan(false);
             clearInterval(intervalId);
-            
-            // 异步处理地理编码
-            handleGeocoding(result.plan);
           } else if (result.error || (!result.success && !result.plan)) {
             // 如果是后端服务且仍在运行中，继续轮询
             if (result.isStillRunning) {
@@ -198,7 +154,6 @@ const PlanningPageWrapper: React.FC = () => {
     <OriginalPlanningPage 
       plan={currentPlan} 
       isLoading={isLoadingPlan && !currentPlan} 
-      isLoadingGeocoding={isLoadingGeocoding}
       error={error}
       onModifyPlan={handleModifyPlan}
       isModifying={isModifyingPlan}

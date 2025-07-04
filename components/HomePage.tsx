@@ -355,7 +355,6 @@ const ScrollingDestinationPanel: React.FC = () => {
                 } ${hasError ? 'bg-gradient-to-br ' + destination.color : ''}`}
                 onLoad={() => setIsLoading(false)}
                 onError={() => {
-                  console.log(`Failed to load image for ${destination.name}`);
                   setIsLoading(false);
                   setHasError(true);
                 }}

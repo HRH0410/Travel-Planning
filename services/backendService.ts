@@ -20,7 +20,6 @@ const convertDemandToBackendFormat = (demand: UserDemand) => {
 // 将后端返回的结果转换为前端TravelPlan格式
 const convertBackendResultToTravelPlan = (backendResult: any, demand: UserDemand, taskId: string): TravelPlan => {
   const plan = backendResult.result;
-  console.log('后端返回的计划数据:', plan);
   
   // 创建基础的TravelPlan结构
   const travelPlan: TravelPlan = {
@@ -122,7 +121,6 @@ const convertBackendResultToTravelPlan = (backendResult: any, demand: UserDemand
   // 计算总费用
   travelPlan.totalEstimatedCost = travelPlan.dailyPlans.reduce((sum: number, day: any) => sum + (day.dailyCost || 0), 0);
 
-  console.log('转换后的旅行计划:', travelPlan);
   return travelPlan;
 };
 
@@ -214,11 +212,9 @@ export const getBackendPlanningResultWithCoordinates = async (taskId: string, de
   
   if (result.success && result.plan) {
     try {
-      console.log('正在获取景点坐标信息...');
       const updatedPlan = await updateTravelPlanCoordinates(result.plan);
       return { success: true, plan: updatedPlan };
     } catch (error) {
-      console.warn('坐标更新失败，返回原始计划:', error);
       return result; // 如果坐标更新失败，仍然返回原始计划
     }
   }
@@ -240,7 +236,6 @@ export const checkBackendConnection = async (): Promise<boolean> => {
     clearTimeout(timeoutId);
     return response.ok;
   } catch (error) {
-    console.warn('后端连接检查失败:', error);
     return false;
   }
 };

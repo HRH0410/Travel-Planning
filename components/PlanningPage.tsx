@@ -6,7 +6,7 @@ import { LoadingSpinner, TravelPlanningLoader } from './ui/LoadingSpinner';
 import { Splitter } from './ui/Splitter';
 import { Modal } from './ui/Modal';
 import { AmapComponent } from './ui/AmapComponent';
-import { geocodeAddress, extractLocationName, isValidCoordinate, updateTravelPlanCoordinates } from '../services/geocodingService';
+import { extractLocationName, isValidCoordinate, updateTravelPlanCoordinates, batchGeocodeAddresses, BatchGeocodingRequest } from '../services/geocodingService';
 
 interface ItineraryViewProps {
   dailyPlans: DailyPlan[];
@@ -331,24 +331,6 @@ const TravelTimeline: React.FC<TravelTimelineProps> = ({
 }) => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   
-  // 添加调试信息
-  console.log('所有活动:', activities.map((act, idx) => ({
-    index: idx,
-    type: act.type,
-    position: act.position,
-    isTravel: act.type === 'travel' || act.type === 'train',
-    hasTransports: !!(act.transports && act.transports.length > 0)
-  })));
-
-  // 检查是否有任何形式的通勤数据
-  const hasAnyTravel = activities.some(act => 
-    act.type === 'travel' || 
-    act.type === 'train' || 
-    (act.transports && act.transports.length > 0)
-  );
-  
-  console.log('是否有通勤数据:', hasAnyTravel);
-  
   return (
     <div className="space-y-0" style={isMobile ? {
       WebkitOverflowScrolling: 'touch',
@@ -357,14 +339,6 @@ const TravelTimeline: React.FC<TravelTimelineProps> = ({
       {activities.map((activity, index) => {
         const isTravel = activity.type === 'travel' || activity.type === 'train';
         const isStartEnd = isStartOrEndTravel(activities, index);
-        
-        console.log(`活动 ${index}:`, {
-          type: activity.type,
-          position: activity.position,
-          isTravel,
-          isStartEnd,
-          hasTransports: !!(activity.transports && activity.transports.length > 0)
-        });
         
         return (
           <div key={activity.id || index} className="relative">
@@ -684,15 +658,13 @@ interface MapViewProps {
   activeDay?: number;
   selectedActivityId?: string | null;
   onActivityClick?: (activityId: string | null) => void;
-  isLoadingGeocoding?: boolean;
 }
 
 const MapView: React.FC<MapViewProps> = ({ 
   dailyPlans,
   activeDay,
   selectedActivityId,
-  onActivityClick,
-  isLoadingGeocoding = false
+  onActivityClick
 }) => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const [markers, setMarkers] = useState<Array<{
@@ -704,8 +676,10 @@ const MapView: React.FC<MapViewProps> = ({
     day?: number; // 添加天数信息
   }>>([]);
   const [isLoadingCoordinates, setIsLoadingCoordinates] = useState(false);
+  const [coordinatesReady, setCoordinatesReady] = useState(false); // 坐标是否全部就绪
   const [mapZoom, setMapZoom] = useState(13); // 添加缩放状态管理
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false); // 地图信息面板折叠状态
+  const [calculatedMapCenter, setCalculatedMapCenter] = useState<{ longitude: number; latitude: number } | undefined>(undefined); // 计算出的地图中心
   
   // 检查是否有pose字段（已保存的坐标）
   const hasValidPose = (item: any): boolean => {
@@ -721,7 +695,7 @@ const MapView: React.FC<MapViewProps> = ({
       existingData[key] = { ...existingData[key], ...coordinates };
       localStorage.setItem('saved_coordinates', JSON.stringify(existingData));
     } catch (error) {
-      console.warn('无法保存坐标到localStorage:', error);
+      // localStorage 保存失败
     }
   };
 
@@ -731,7 +705,6 @@ const MapView: React.FC<MapViewProps> = ({
       const savedData = JSON.parse(localStorage.getItem('saved_coordinates') || '{}');
       return savedData[key] || {};
     } catch (error) {
-      console.warn('无法从localStorage读取坐标:', error);
       return {};
     }
   };
@@ -749,11 +722,10 @@ const MapView: React.FC<MapViewProps> = ({
     if (initialMarkers.length === 0) return initialMarkers;
     
     const fixedMarkers = [...initialMarkers];
-    const newCoordinates: { [name: string]: { longitude: number; latitude: number } } = {};
     const storageKey = `plan_${activeDay}_${new Date().toDateString()}`;
     const savedCoordinates = getSavedCoordinates(storageKey);
     
-    // 只处理没有pose字段且坐标无效的标记
+    // 收集需要地理编码的标记
     const markersNeedingFix = fixedMarkers.filter(marker => 
       !marker.hasPose && 
       !isValidCoordinate(marker.longitude, marker.latitude) &&
@@ -776,56 +748,62 @@ const MapView: React.FC<MapViewProps> = ({
     
     setIsLoadingCoordinates(true);
     
-    for (let i = 0; i < fixedMarkers.length; i++) {
-      const marker = fixedMarkers[i];
-      
-      // 先检查是否有保存的坐标
-      if (savedCoordinates[marker.name]) {
-        fixedMarkers[i] = {
-          ...marker,
-          longitude: savedCoordinates[marker.name].longitude,
-          latitude: savedCoordinates[marker.name].latitude
-        };
-        continue;
-      }
-      
-      // 只对没有pose字段且坐标无效的标记进行API调用
-      if (!marker.hasPose && !isValidCoordinate(marker.longitude, marker.latitude)) {
-        console.log(`修复无效坐标: ${marker.name}`);
-        
-        // 提取清洁的地点名称
-        const cleanName = extractLocationName(marker.name);
-        const geocodingResult = await geocodeAddress(cleanName);
-        
-        if (geocodingResult) {
-          fixedMarkers[i] = {
+    try {
+      // 首先应用已保存的坐标
+      fixedMarkers.forEach((marker, index) => {
+        if (savedCoordinates[marker.name]) {
+          fixedMarkers[index] = {
             ...marker,
-            longitude: geocodingResult.longitude,
-            latitude: geocodingResult.latitude
+            longitude: savedCoordinates[marker.name].longitude,
+            latitude: savedCoordinates[marker.name].latitude
           };
-          
-          // 保存新获取的坐标
-          newCoordinates[marker.name] = {
-            longitude: geocodingResult.longitude,
-            latitude: geocodingResult.latitude
-          };
-          
-          console.log(`成功修复坐标: ${marker.name} -> (${geocodingResult.longitude}, ${geocodingResult.latitude})`);
-        } else {
-          console.warn(`无法修复坐标: ${marker.name}`);
         }
+      });
+      
+      // 准备批量地理编码请求
+      const requests: BatchGeocodingRequest[] = markersNeedingFix.map(marker => ({
+        address: extractLocationName(marker.name),
+        city: dailyPlans?.[0]?.activities?.[0]?.position?.includes('北京') ? '北京' : undefined
+      }));
+      
+      if (requests.length > 0) {
+        // 发送批量地理编码请求
+        const results = await batchGeocodeAddresses(requests);
         
-        // 添加延迟避免API限流
-        await new Promise(resolve => setTimeout(resolve, 200));
+        const newCoordinates: { [name: string]: { longitude: number; latitude: number } } = {};
+        
+        // 应用地理编码结果
+        markersNeedingFix.forEach((marker, index) => {
+          const result = results[index];
+          if (result && result.success) {
+            const markerIndex = fixedMarkers.findIndex(m => m.name === marker.name);
+            if (markerIndex >= 0) {
+              fixedMarkers[markerIndex] = {
+                ...fixedMarkers[markerIndex],
+                longitude: result.longitude,
+                latitude: result.latitude
+              };
+              
+              // 保存新获取的坐标
+              newCoordinates[marker.name] = {
+                longitude: result.longitude,
+                latitude: result.latitude
+              };
+            }
+          }
+        });
+        
+        // 保存新获取的坐标
+        if (Object.keys(newCoordinates).length > 0) {
+          saveCoordinatesToStorage(storageKey, newCoordinates);
+        }
       }
+    } catch (error) {
+      // 批量地理编码失败
+    } finally {
+      setIsLoadingCoordinates(false);
     }
     
-    // 保存新获取的坐标
-    if (Object.keys(newCoordinates).length > 0) {
-      saveCoordinatesToStorage(storageKey, newCoordinates);
-    }
-    
-    setIsLoadingCoordinates(false);
     return fixedMarkers;
   };
 
@@ -842,9 +820,10 @@ const MapView: React.FC<MapViewProps> = ({
     if (
       currentContent === dailyPlansContentRef.current &&
       currentActiveDay === activeDayRef.current &&
+      coordinatesReady &&
       markers.length > 0
     ) {
-      // 如果内容和活动天都没有变化且已有标记，不重新初始化
+      // 如果内容和活动天都没有变化且坐标已就绪且已有标记，不重新初始化
       return;
     }
 
@@ -852,6 +831,7 @@ const MapView: React.FC<MapViewProps> = ({
     activeDayRef.current = currentActiveDay;
     
     const initializeMarkers = async () => {
+      setCoordinatesReady(false); // 重置坐标就绪状态
       const initialMarkers: Array<{
         longitude: number;
         latitude: number;
@@ -875,14 +855,15 @@ const MapView: React.FC<MapViewProps> = ({
             const hasPose = hasValidPose(activity);
             let longitude, latitude;
             
-            if (hasPose && activity.pose) {
-              // 优先使用pose中的坐标
-              longitude = activity.pose.longitude;
-              latitude = activity.pose.latitude;
-            } else if (activity.longitude !== undefined && activity.latitude !== undefined) {
-              // 使用activity自身的坐标，但必须是有效的
+            // 首先尝试从activity直接读取坐标
+            if (activity.longitude !== undefined && activity.latitude !== undefined && 
+                isValidCoordinate(activity.longitude, activity.latitude)) {
               longitude = activity.longitude;
               latitude = activity.latitude;
+            } else if (hasPose && activity.pose) {
+              // 如果activity的坐标无效，尝试从pose读取
+              longitude = activity.pose.longitude;
+              latitude = activity.pose.latitude;
             } else {
               // 如果都没有有效坐标，使用NaN标记需要后续修复
               longitude = NaN;
@@ -906,6 +887,9 @@ const MapView: React.FC<MapViewProps> = ({
       // 修复坐标并设置标记
       const fixedMarkers = await fixInvalidCoordinates(initialMarkers);
       setMarkers(fixedMarkers);
+      setCoordinatesReady(true); // 标记坐标已就绪
+      
+      // 注意：中心点计算将由 useEffect 处理，这里不再直接设置
     };
 
     initializeMarkers();
@@ -913,48 +897,68 @@ const MapView: React.FC<MapViewProps> = ({
 
   // 监听选中状态变化，重新计算地图中心点
   useEffect(() => {
-    if (selectedActivityId && markers.length > 0) {
+    if (coordinatesReady && selectedActivityId && markers.length > 0) {
       const selectedMarker = markers.find(marker => marker.name === selectedActivityId);
       if (selectedMarker && isValidCoordinate(selectedMarker.longitude, selectedMarker.latitude)) {
-        console.log('选中活动变化，重新居中地图:', selectedActivityId);
+        // 选中活动变化，立即更新地图中心点到选中的活动
+        const newCenter = { longitude: selectedMarker.longitude, latitude: selectedMarker.latitude };
+        setCalculatedMapCenter(newCenter);
+        
+        // 设置适中的缩放级别来突出显示选中的活动
+        setMapZoom(14);
       }
     }
-  }, [selectedActivityId, markers]);
+  }, [coordinatesReady, selectedActivityId, markers]);
 
-  // 计算地图中心点 - 优先选中的标记，严格验证
+  // 当取消选中活动时，回到全局中心点
+  useEffect(() => {
+    if (coordinatesReady && !selectedActivityId && markers.length > 0) {
+      const validMarkers = markers.filter(marker => 
+        isValidCoordinate(marker.longitude, marker.latitude)
+      );
+      
+      if (validMarkers.length > 0) {
+        // 计算所有标记的平均中心点
+        const avgLng = validMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / validMarkers.length;
+        const avgLat = validMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / validMarkers.length;
+        
+        if (isValidCoordinate(avgLng, avgLat)) {
+          const globalCenter = { longitude: avgLng, latitude: avgLat };
+          setCalculatedMapCenter(globalCenter);
+          
+          // 设置适合显示所有标记的缩放级别
+          const optimalZoom = calculateOptimalZoom(validMarkers);
+          setMapZoom(optimalZoom);
+        }
+      }
+    }
+  }, [coordinatesReady, selectedActivityId, markers]);
+
   // 计算地图中心点 - 优先选中的标记，严格验证，使用 useMemo 缓存结果
   const mapCenter = useMemo(() => {
-    console.log('计算地图中心点，总标记数量:', markers.length);
+    
+    // 优先使用计算出的中心点
+    if (calculatedMapCenter && isValidCoordinate(calculatedMapCenter.longitude, calculatedMapCenter.latitude)) {
+      return calculatedMapCenter;
+    }
+    
+    // 只有在坐标就绪时才计算地图中心点
+    if (!coordinatesReady) {
+      return undefined;
+    }
     
     if (markers.length > 0) {
       // 过滤掉无效的经纬度数据 - 严格验证
       const validMarkers = markers.filter(marker => {
         const isValid = isValidCoordinate(marker.longitude, marker.latitude);
-        if (!isValid) {
-          console.warn('发现无效标记坐标（计算中心点时）:', { 
-            name: marker.name, 
-            lng: marker.longitude, 
-            lat: marker.latitude,
-            'lng类型': typeof marker.longitude,
-            'lat类型': typeof marker.latitude,
-            'lng是否NaN': Number.isNaN(marker.longitude),
-            'lat是否NaN': Number.isNaN(marker.latitude),
-            'lng是否有限': Number.isFinite(marker.longitude),
-            'lat是否有限': Number.isFinite(marker.latitude)
-          });
-        }
         return isValid;
       });
-      
-      console.log('有效标记数量:', validMarkers.length, '/', markers.length);
       
       if (validMarkers.length > 0) {
         // 如果有选中的活动，优先将其作为中心点
         if (selectedActivityId) {
           const selectedMarker = validMarkers.find(marker => marker.name === selectedActivityId);
           if (selectedMarker && isValidCoordinate(selectedMarker.longitude, selectedMarker.latitude)) {
-            console.log('使用选中标记作为地图中心:', selectedMarker.name, 
-              { lng: selectedMarker.longitude, lat: selectedMarker.latitude });
             return { longitude: selectedMarker.longitude, latitude: selectedMarker.latitude };
           }
         }
@@ -963,36 +967,33 @@ const MapView: React.FC<MapViewProps> = ({
         const avgLng = validMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / validMarkers.length;
         const avgLat = validMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / validMarkers.length;
         
-        console.log('计算平均中心点:', { avgLng, avgLat });
-        
         // 确保计算出的中心点是有效的
         if (isValidCoordinate(avgLng, avgLat)) {
-          console.log('✅ 使用平均中心点:', { longitude: avgLng, latitude: avgLat });
           return { longitude: avgLng, latitude: avgLat };
-        } else {
-          console.warn('计算出的平均中心点无效:', { avgLng, avgLat });
         }
       }
     }
     
-    console.log('使用默认中心点');
     return undefined; // 使用默认中心点
-  }, [markers, selectedActivityId]); // 只依赖 markers 和 selectedActivityId
+  }, [calculatedMapCenter, coordinatesReady, markers, selectedActivityId]);
 
   // 处理地图中心变化
   const handleMapCenterChange = (newCenter: { longitude: number; latitude: number }) => {
-    console.log('地图中心变化:', newCenter);
+    // 更新计算出的地图中心点
+    setCalculatedMapCenter(newCenter);
     // 这里可以根据需要添加额外的逻辑，比如更新URL参数等
   };
 
   const handleMarkerClick = (marker: any) => {
-    console.log('标记被点击:', marker.name);
+    // 确保坐标已就绪再处理点击事件
+    if (!coordinatesReady) {
+      return;
+    }
     
     // 触发点击事件，设置选中状态（如果已选中则取消选中）
     if (onActivityClick) {
       const newSelectedId = selectedActivityId === marker.name ? null : marker.name;
       onActivityClick(newSelectedId);
-      console.log('设置选中活动ID:', newSelectedId);
     }
     
     // 查找包含此标记的活动并滚动到对应位置
@@ -1008,14 +1009,10 @@ const MapView: React.FC<MapViewProps> = ({
         });
         
         if (matchingActivity) {
-          console.log(`找到匹配的活动:`, matchingActivity.position);
-          
           // 滚动到活动元素并居中显示
           setTimeout(() => {
             const activityElement = document.querySelector(`[data-activity="${marker.name}"]`);
             if (activityElement) {
-              console.log('找到活动元素:', activityElement);
-              
               // 优先查找具有 overflow-y-auto 类的滚动容器
               let scrollContainer = activityElement.closest('.overflow-y-auto') as HTMLElement;
               
@@ -1025,8 +1022,6 @@ const MapView: React.FC<MapViewProps> = ({
               }
               
               if (scrollContainer) {
-                console.log('找到滚动容器:', scrollContainer);
-                
                 // 在指定容器内滚动并居中显示
                 const containerRect = scrollContainer.getBoundingClientRect();
                 const elementRect = activityElement.getBoundingClientRect();
@@ -1051,27 +1046,14 @@ const MapView: React.FC<MapViewProps> = ({
                   top: finalScrollTop,
                   behavior: 'smooth'
                 });
-                console.log('滚动到活动元素并居中', { 
-                  relativeTop, 
-                  centerOffset, 
-                  targetScrollTop, 
-                  finalScrollTop,
-                  containerHeight,
-                  elementHeight
-                });
               } else {
-                console.log('未找到滚动容器，使用默认滚动');
-                
                 // 使用滚动策略将元素居中显示
                 activityElement.scrollIntoView({ 
                   behavior: 'smooth', 
                   block: 'center',
                   inline: 'nearest'
                 });
-                console.log('使用默认滚动到活动元素');
               }
-            } else {
-              console.warn(`未找到 data-activity="${marker.name}" 的元素`);
             }
           }, 100);
         }
@@ -1079,38 +1061,96 @@ const MapView: React.FC<MapViewProps> = ({
     }
   };
 
+  // 在地图数据加载完成后自动计算中心点
+  useEffect(() => {
+    // 当坐标就绪且有有效标记时，计算并应用地图中心点
+    if (coordinatesReady && markers.length > 0 && !calculatedMapCenter) {
+      const validMarkers = markers.filter(marker => 
+        isValidCoordinate(marker.longitude, marker.latitude)
+      );
+      
+      if (validMarkers.length > 0) {
+        let centerPoint: { longitude: number; latitude: number } | undefined;
+        
+        // 如果有选中的活动，优先使用选中活动的位置作为中心点
+        if (selectedActivityId) {
+          const selectedMarker = validMarkers.find(marker => marker.name === selectedActivityId);
+          if (selectedMarker) {
+            centerPoint = { 
+              longitude: selectedMarker.longitude, 
+              latitude: selectedMarker.latitude 
+            };
+          }
+        }
+        
+        // 如果没有选中活动或找不到选中的标记，计算所有标记的平均中心点
+        if (!centerPoint && validMarkers.length > 0) {
+          const avgLng = validMarkers.reduce((sum, marker) => sum + marker.longitude, 0) / validMarkers.length;
+          const avgLat = validMarkers.reduce((sum, marker) => sum + marker.latitude, 0) / validMarkers.length;
+          
+          if (isValidCoordinate(avgLng, avgLat)) {
+            centerPoint = { longitude: avgLng, latitude: avgLat };
+          }
+        }
+        
+        // 如果计算出了有效的中心点，设置地图中心和缩放级别
+        if (centerPoint) {
+          setCalculatedMapCenter(centerPoint);
+          
+          // 计算并设置最佳缩放级别
+          const optimalZoom = calculateOptimalZoom(validMarkers);
+          setMapZoom(optimalZoom);
+        }
+      }
+    }
+  }, [coordinatesReady, markers, selectedActivityId, calculatedMapCenter]);
+
+  // 根据标记点分布计算适合的缩放级别
+  const calculateOptimalZoom = (markers: Array<{ longitude: number; latitude: number }>) => {
+    if (markers.length <= 1) {
+      return 15; // 单个或无标记时使用较高缩放级别
+    }
+    
+    // 计算标记点的经纬度范围
+    const lngs = markers.map(m => m.longitude);
+    const lats = markers.map(m => m.latitude);
+    const lngRange = Math.max(...lngs) - Math.min(...lngs);
+    const latRange = Math.max(...lats) - Math.min(...lats);
+    const maxRange = Math.max(lngRange, latRange);
+    
+    // 根据范围计算缩放级别
+    if (maxRange > 1) return 9;        // 非常大的范围，城市级别
+    if (maxRange > 0.5) return 10;     // 大范围，市区级别
+    if (maxRange > 0.1) return 12;     // 中等范围，区域级别
+    if (maxRange > 0.05) return 13;    // 较小范围，街道级别
+    if (maxRange > 0.01) return 14;    // 小范围，街区级别
+    return 15;                         // 很小范围，建筑级别
+  };
+
   // 过滤有效的标记点 - 严格过滤，确保不传递任何无效坐标给地图
   const validMarkers = markers.filter(marker => {
     const isValid = isValidCoordinate(marker.longitude, marker.latitude);
-    if (!isValid) {
-      console.warn('过滤掉无效标记:', { 
-        name: marker.name, 
-        lng: marker.longitude, 
-        lat: marker.latitude,
-        type: typeof marker.longitude + '/' + typeof marker.latitude
-      });
-    }
     return isValid;
   });
 
-  console.log('传递给地图的有效标记数量:', validMarkers.length, '总标记数量:', markers.length);
 
   return (
     <div className="h-full relative">
       {/* 加载指示器 */}
-      {(isLoadingCoordinates || isLoadingGeocoding) && (
+      {isLoadingCoordinates && (
         <div className="absolute top-4 right-4 bg-white bg-opacity-90 rounded-lg shadow-lg p-2 z-20">
           <div className="flex items-center gap-2">
             <LoadingSpinner size="sm" />
-            <span className="text-sm text-gray-600">
-              {isLoadingGeocoding ? '正在获取地理位置...' : '正在获取位置信息...'}
-            </span>
+            <span className="text-sm text-gray-600">正在获取位置信息...</span>
           </div>
         </div>
       )}
       
-      {/* 只有在有有效标记时才渲染地图 */}
-      {(validMarkers.length > 0 || mapCenter) ? (
+      {/* 只有在坐标就绪且有有效标记时才渲染地图 */}
+      {(() => {
+        const shouldRenderMap = coordinatesReady && validMarkers.length > 0 && mapCenter;
+        return shouldRenderMap;
+      })() ? (
         <AmapComponent
           center={mapCenter}
           markers={validMarkers}
@@ -1135,7 +1175,7 @@ const MapView: React.FC<MapViewProps> = ({
       )}
       
       {/* 地图信息面板 - 只显示当前天的行程，移动端优化 */}
-      {validMarkers.length > 0 && activeDay && (
+      {coordinatesReady && validMarkers.length > 0 && activeDay && (
         <div className={`absolute ${isMobile ? 'top-2 left-2 right-[100px]' : 'top-4 left-4'} bg-white bg-opacity-90 rounded-lg shadow-lg transition-all duration-300 ${
           isPanelCollapsed 
             ? 'p-2 h-auto' 
@@ -1263,7 +1303,6 @@ const getActivityMapType = (activityType: string): 'attraction' | 'dining' | 'ac
 interface PlanningPageProps {
   plan: TravelPlan | null;
   isLoading: boolean;
-  isLoadingGeocoding?: boolean;
   error: string | null;
   onModifyPlan: (modificationRequest: string) => void;
   isModifying: boolean;
@@ -1274,7 +1313,6 @@ interface PlanningPageProps {
 export const PlanningPage: React.FC<PlanningPageProps> = ({ 
   plan, 
   isLoading, 
-  isLoadingGeocoding = false,
   error, 
   onModifyPlan, 
   isModifying, 
@@ -1308,7 +1346,6 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
           const updated = await updateTravelPlanCoordinates(plan);
           setUpdatedPlan(updated);
         } catch (error) {
-          console.error('更新坐标失败:', error);
           setUpdatedPlan(plan); // 使用原始计划
         } finally {
           setIsUpdatingCoordinates(false);
@@ -1403,10 +1440,10 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
           {totalCost > 0 && `，预计总花费：${totalCost.toFixed(2)} ${displayCurrency}`}
         </p>
         {isUpdatingCoordinates && (
-          <p className="text-sm text-blue-600 mt-2 flex items-center gap-2">
+          <div className="text-sm text-blue-600 mt-2 flex items-center gap-2">
             <LoadingSpinner size="sm" />
             正在获取地点坐标信息...
-          </p>
+          </div>
         )}
       </header>
       <div className={`${isMobile ? 'flex flex-col space-y-6' : 'flex-1 w-full flex flex-col lg:flex-row relative min-h-0'}`}>
@@ -1526,7 +1563,6 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
                 activeDay={activeDay}
                 selectedActivityId={selectedActivityId}
                 onActivityClick={setSelectedActivityId}
-                isLoadingGeocoding={isLoadingGeocoding}
               />
             </div>
           </div>

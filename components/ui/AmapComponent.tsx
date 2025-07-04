@@ -87,7 +87,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
             mapInstanceRef.current.remove(marker);
           }
         } catch (error) {
-          console.warn('清理标记点时出错:', error);
         }
       });
       markersRef.current = [];
@@ -137,7 +136,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
   // 更新标记点
   const updateMarkers = () => {
     if (!mapInstanceRef.current || !mapReadyRef.current) {
-      console.log('地图未准备好，跳过标记点更新');
       return;
     }
 
@@ -157,7 +155,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
       marker.latitude >= -90 && marker.latitude <= 90
     );
 
-    console.log(`更新标记点: ${validMarkers.length}/${markers.length}个有效标记`);
 
     // 添加新的标记点
     validMarkers.forEach((markerData, index) => {
@@ -183,9 +180,7 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
             try {
               const newCenter = new (window as any).AMap.LngLat(markerData.longitude, markerData.latitude);
               mapInstanceRef.current.panTo(newCenter, 400, 'ease-in-out');
-              console.log(`✅ 地图中心已设置为: ${markerData.name} (${markerData.longitude}, ${markerData.latitude})`);
             } catch (error) {
-              console.warn('设置地图中心失败:', error);
             }
           }
         });
@@ -194,13 +189,10 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
         mapInstanceRef.current.add(marker);
         markersRef.current.push(marker);
         
-        console.log(`✅ 添加标记点: ${markerData.name} at (${markerData.longitude}, ${markerData.latitude})`);
       } catch (error) {
-        console.warn(`创建标记点失败: ${markerData.name}`, error);
       }
     });
 
-    console.log(`✅ 标记点更新完成，共${markersRef.current.length}个标记点`);
   };
 
   // 初始化地图（只在首次加载时）
@@ -210,24 +202,20 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
 
     const initMap = async () => {
       if (!mapRef.current || mapInstanceRef.current) {
-        console.log('地图容器不可用或地图已存在，跳过初始化');
         return;
       }
 
       // 检查容器是否仍在DOM中
       const container = mapRef.current;
       if (!container.isConnected) {
-        console.warn('容器已从DOM中移除，跳过初始化');
         return;
       }
 
       const width = container.offsetWidth;
       const height = container.offsetHeight;
       
-      console.log('初始化时容器尺寸:', { width, height });
       
       if (width <= 0 || height <= 0 || isNaN(width) || isNaN(height)) {
-        console.warn('容器尺寸无效，延迟初始化地图');
         setTimeout(() => {
           // 再次检查容器是否仍然存在
           if (mapRef.current && mapRef.current.isConnected) {
@@ -238,7 +226,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
       }
 
       try {
-        console.log('开始初始化高德地图...');
         
         const AMap = await AMapLoader.load({
           key: AMAP_CONFIG.KEY,
@@ -256,7 +243,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
           })
         });
 
-        console.log('✅ 高德地图API加载成功');
 
         const safeCenter = center || DEFAULT_MAP_CENTER;
         
@@ -271,22 +257,18 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
             safeCenter.latitude >= -90 && safeCenter.latitude <= 90) {
           validCenter = [safeCenter.longitude, safeCenter.latitude];
         } else {
-          console.warn('传入的中心点无效，使用默认中心点:', safeCenter);
           validCenter = [DEFAULT_MAP_CENTER.longitude, DEFAULT_MAP_CENTER.latitude];
         }
 
-        console.log('初始化地图中心点:', validCenter);
 
         // 验证缩放级别 - 3D建筑在较高缩放级别(14+)下更明显
         const validZoom = (typeof zoom === 'number' && !isNaN(zoom) && isFinite(zoom) && zoom >= 3 && zoom <= 20) 
           ? Math.max(zoom, 14)  // 确保最小缩放级别为14，以便显示3D建筑
           : 15;  // 默认使用15级缩放，这个级别下3D建筑效果最佳
 
-        console.log('初始化缩放级别:', validZoom);
 
         // 再次检查容器是否仍然有效
         if (!mapRef.current || !mapRef.current.isConnected) {
-          console.warn('容器在初始化过程中被移除，中止地图创建');
           return;
         }
 
@@ -338,7 +320,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
           // 如果是地图相关的 LngLat 错误，降级为警告
           if (errorMessage.includes('Invalid Object: LngLat') || 
               errorMessage.includes('LngLat(NaN, NaN)')) {
-            console.warn('地图坐标警告（已处理）:', ...args);
             return;
           }
           // 其他错误正常输出
@@ -350,14 +331,12 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
         // 临时替换 console.error
         console.error = handleMapError;        // 监听地图加载完成
         mapInstance.on('complete', () => {
-          console.log('✅ 地图加载完成');
           mapReadyRef.current = true;
           
           // 强制启用3D建筑显示
           try {
             // 确保3D建筑图层可见
             mapInstance.getCity((info: any) => {
-              console.log('当前城市:', info);
               // 强制刷新建筑图层
               mapInstance.setFeatures(['bg', 'point', 'road', 'building']);
               // 高德地图 API 2.1Beta 中没有 refresh 方法，改用其他方式强制重新渲染
@@ -371,11 +350,9 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
                   mapInstance.setZoom(currentZoom);
                 }
               } catch (renderError) {
-                console.warn('地图重新渲染失败:', renderError);
               }
             });
           } catch (error) {
-            console.warn('获取城市信息失败:', error);
           }
           
           // 禁用浏览器默认的右键菜单和拖拽行为
@@ -404,7 +381,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
             (mapContainer.style as any).mozUserSelect = 'none';
             (mapContainer.style as any).msUserSelect = 'none';
             
-            console.log('✅ 地图交互事件处理设置完成');
           }
           
           // 添加3D控制条
@@ -419,9 +395,7 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
               showDirectionButton: true // 显示方向按钮
             });
             mapInstance.addControl(controlBar);
-            console.log('✅ 3D控制条添加成功');
           } catch (error) {
-            console.warn('添加3D控制条失败:', error);
           }
           
           // 添加工具条
@@ -439,9 +413,7 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
               useNative: false          // 不使用原生定位
             });
             mapInstance.addControl(toolbar);
-            console.log('✅ 工具条添加成功');
           } catch (error) {
-            console.warn('添加工具条失败:', error);
           }
           
           // 添加比例尺
@@ -453,9 +425,7 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
               }
             });
             mapInstance.addControl(scale);
-            console.log('✅ 比例尺添加成功');
           } catch (error) {
-            console.warn('添加比例尺失败:', error);
           }
           
           // 延迟设置视角，确保3D建筑正确加载
@@ -475,11 +445,8 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
                   mapInstance.setZoom(currentZoom);
                 }
               } catch (renderError) {
-                console.warn('地图重新渲染失败:', renderError);
               }
-              console.log('✅ 3D视角设置完成');
             } catch (error) {
-              console.warn('设置3D视角失败:', error);
             }
           }, 1000);
           
@@ -489,11 +456,9 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
 
         // 监听地图错误（但不阻止正常操作）
         mapInstance.on('error', (error: any) => {
-          console.warn('⚠️ 地图运行时警告:', error);
           // 不重新抛出错误，避免阻止地图操作
         });
 
-        console.log('地图初始化完成，等待加载完成事件');
 
       } catch (error) {
         console.error('地图初始化失败:', error);
@@ -504,7 +469,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
 
     // 清理函数
     return () => {
-      console.log('开始清理地图组件...');
       
       // 恢复原始的 console.error
       if (originalConsoleError) {
@@ -520,7 +484,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
       // 销毁地图实例
       if (mapInstance) {
         try {
-          console.log('销毁地图实例...');
           
           // 先清除所有事件监听器
           if (typeof mapInstance.off === 'function') {
@@ -533,22 +496,18 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
             try {
               if (mapInstance && typeof mapInstance.destroy === 'function') {
                 mapInstance.destroy();
-                console.log('✅ 地图实例销毁完成');
               }
             } catch (destroyError) {
-              console.warn('销毁地图实例时出错:', destroyError);
             }
           }, 100);
           
         } catch (error) {
-          console.warn('地图清理过程中出错:', error);
         } finally {
           mapInstance = null;
           mapInstanceRef.current = null;
         }
       }
       
-      console.log('地图组件清理完成');
     };
   }, []); // 只在组件挂载时执行一次
 
@@ -573,7 +532,6 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
             marker.setIcon(newIcon);
             marker.setzIndex(isSelected ? 1000 : 100);
           } catch (error) {
-            console.warn('更新标记样式失败:', error);
           }
         }
       });
@@ -593,9 +551,7 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
         try {
           const newCenter = new (window as any).AMap.LngLat(selectedMarker.longitude, selectedMarker.latitude);
           mapInstanceRef.current.panTo(newCenter, 400, 'ease-in-out');
-          console.log(`✅ 自动居中到选中景点: ${selectedMarker.name} (${selectedMarker.longitude}, ${selectedMarker.latitude})`);
         } catch (error) {
-          console.warn('自动居中失败:', error);
         }
       }
     }
@@ -617,10 +573,8 @@ const NativeAmapComponent: React.FC<AmapComponentProps> = ({
           try {
             if (typeof mapInstanceRef.current.getSize === 'function') {
               mapInstanceRef.current.getSize();
-              console.log('地图尺寸调整完成');
             }
           } catch (error) {
-            console.warn('调整地图尺寸时出错:', error);
           }
         }
       }, 200);

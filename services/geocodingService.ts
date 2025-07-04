@@ -24,7 +24,6 @@ export interface BatchGeocodingResult {
 // 调用后端地理编码服务
 export const geocodeAddress = async (address: string): Promise<GeocodingResult | null> => {
   if (!address || !address.trim()) {
-    console.warn('地址为空，无法进行地理编码');
     return null;
   }
 
@@ -50,7 +49,6 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult |
       }
     }
     
-    console.warn(`无法获取地址 "${address}" 的地理编码`);
     return null;
   } catch (error) {
     console.error(`地理编码请求失败 (${address}):`, error);
@@ -61,7 +59,6 @@ export const geocodeAddress = async (address: string): Promise<GeocodingResult |
 // 调用后端批量地理编码服务
 export const batchGeocodeAddresses = async (requests: BatchGeocodingRequest[]): Promise<BatchGeocodingResult[]> => {
   if (!requests || requests.length === 0) {
-    console.warn('批量地理编码请求为空');
     return [];
   }
 
@@ -75,19 +72,20 @@ export const batchGeocodeAddresses = async (requests: BatchGeocodingRequest[]): 
     });
 
     if (response.ok) {
-      const results = await response.json();
-      if (Array.isArray(results)) {
-        return results.map(result => ({
-          address: result.address,
-          longitude: result.longitude || 0,
-          latitude: result.latitude || 0,
-          formattedAddress: result.formatted_address,
-          success: !!result.success
+      const apiResponse = await response.json();
+      
+      // 处理新的API响应格式
+      if (apiResponse.success && apiResponse.data && Array.isArray(apiResponse.data)) {
+        return apiResponse.data.map((item: any) => ({
+          address: item.original_address || '',
+          longitude: item.success && item.data ? (item.data.longitude || 0) : 0,
+          latitude: item.success && item.data ? (item.data.latitude || 0) : 0,
+          formattedAddress: item.success && item.data ? item.data.formatted_address : undefined,
+          success: !!item.success
         }));
       }
     }
     
-    console.warn('批量地理编码请求失败');
     return requests.map(req => ({
       address: req.address,
       longitude: 0,
@@ -134,27 +132,21 @@ export const isValidCoordinate = (longitude: number, latitude: number): boolean 
 
 // 更新旅行计划中的坐标信息
 export const updateTravelPlanCoordinates = async (plan: any): Promise<any> => {
-  console.log('开始更新旅行计划坐标:', plan.taskId);
   const updatedPlan = { ...plan };
   let hasUpdates = false;
 
   // 更新每日活动的坐标
   if (updatedPlan.dailyPlans && Array.isArray(updatedPlan.dailyPlans)) {
-    console.log(`检查 ${updatedPlan.dailyPlans.length} 天的活动`);
     for (const dailyPlan of updatedPlan.dailyPlans) {
       if (dailyPlan.activities && Array.isArray(dailyPlan.activities)) {
-        console.log(`第${dailyPlan.day}天有 ${dailyPlan.activities.length} 个活动`);
         for (const activity of dailyPlan.activities) {
-          console.log(`检查活动: ${activity.position}, pose: ${!!activity.pose}, 坐标: (${activity.longitude}, ${activity.latitude})`);
           
           // 如果活动没有pose字段且坐标无效，则获取坐标
           if (!activity.pose && 
               activity.position && 
               !isValidCoordinate(activity.longitude || 0, activity.latitude || 0)) {
             
-            console.log(`需要获取坐标的活动: ${activity.position}`);
             const cleanName = extractLocationName(activity.position);
-            console.log(`清理后的地点名称: ${cleanName}`);
             const geocodingResult = await geocodeAddress(cleanName);
             
             if (geocodingResult) {
@@ -165,12 +157,9 @@ export const updateTravelPlanCoordinates = async (plan: any): Promise<any> => {
                 longitude: geocodingResult.longitude
               };
               hasUpdates = true;
-              console.log(`更新活动坐标: ${activity.position} -> (${geocodingResult.longitude}, ${geocodingResult.latitude})`);
             } else {
-              console.warn(`无法获取坐标: ${activity.position}`);
             }
           } else {
-            console.log(`跳过活动 ${activity.position}: 已有pose或坐标有效`);
           }
         }
       }
@@ -196,7 +185,6 @@ export const updateTravelPlanCoordinates = async (plan: any): Promise<any> => {
             longitude: geocodingResult.longitude
           };
           hasUpdates = true;
-          console.log(`更新POI坐标: ${poi.name} -> (${geocodingResult.longitude}, ${geocodingResult.latitude})`);
         }
       }
     }
@@ -208,9 +196,7 @@ export const updateTravelPlanCoordinates = async (plan: any): Promise<any> => {
       const savedPlans = JSON.parse(localStorage.getItem('completedPlans') || '{}');
       savedPlans[updatedPlan.taskId] = updatedPlan;
       localStorage.setItem('completedPlans', JSON.stringify(savedPlans));
-      console.log(`已保存更新的坐标到localStorage: ${updatedPlan.taskId}`);
     } catch (error) {
-      console.warn('无法保存更新的计划到localStorage:', error);
     }
   }
 
@@ -276,8 +262,6 @@ export const applyGeocodingResults = (plan: any, results: BatchGeocodingResult[]
     }
   });
 
-  let hasUpdates = false;
-
   // 更新每日活动的坐标
   if (updatedPlan.dailyPlans && Array.isArray(updatedPlan.dailyPlans)) {
     for (const dailyPlan of updatedPlan.dailyPlans) {
@@ -295,8 +279,6 @@ export const applyGeocodingResults = (plan: any, results: BatchGeocodingResult[]
                 latitude: result.latitude,
                 longitude: result.longitude
               };
-              hasUpdates = true;
-              console.log(`应用地理编码结果: ${activity.position} -> (${result.longitude}, ${result.latitude})`);
             }
           }
         }
@@ -319,8 +301,6 @@ export const applyGeocodingResults = (plan: any, results: BatchGeocodingResult[]
             latitude: result.latitude,
             longitude: result.longitude
           };
-          hasUpdates = true;
-          console.log(`应用POI地理编码结果: ${poi.name} -> (${result.longitude}, ${result.latitude})`);
         }
       }
     }

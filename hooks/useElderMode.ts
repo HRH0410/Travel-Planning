@@ -193,7 +193,6 @@ export const useElderMode = () => {
       if (indicator) indicator.remove();
     }
     
-    console.log(`老人模式已${enable ? '启用' : '禁用'}`);
   };
 
   useEffect(() => {
@@ -215,7 +214,6 @@ export const useElderMode = () => {
       applyElderModeStyles(newMode);
       
       // 打印当前状态以便调试
-      console.log(`老人模式切换为: ${newMode ? '开启' : '关闭'}`);
       return newMode;
     });
   }, []);

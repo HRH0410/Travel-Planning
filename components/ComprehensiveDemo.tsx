@@ -12,7 +12,6 @@ export const ComprehensiveDemo: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmitDemand = (demand: UserDemand) => {
-    console.log('提交的需求:', demand);
     setIsLoading(true);
     setCurrentMode('loading');
     

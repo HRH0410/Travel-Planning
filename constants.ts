@@ -18,7 +18,7 @@ export const DEFAULT_MAP_CENTER = {
   longitude: 116.397428,
   latitude: 39.90923
 };
-export const MAX_POLLS = 120; // Max 60 seconds of polling - 更长的轮询时间
+export const MAX_POLLS = 300; // Max 60 seconds of polling - 更长的轮询时间
 
 // 城市配置
 export const CITIES = [
@@ -28,11 +28,12 @@ export const CITIES = [
 
 // 后端API配置
 export const BACKEND_CONFIG = {
-  BASE_URL: 'http://139.224.213.196:8082', // Python Flask服务器地址
+  // BASE_URL: 'http://139.224.213.196:8082', // Python Flask服务器地址
+  BASE_URL: 'http://127.0.0.1:8082', // Python Flask服务器地址
   ENDPOINTS: {
     START_PLAN: '/plan/start',
     GET_RESULT: '/plan/result',
     GEO_CODING: '/geocoding',
-    BATCH_GEO_CODING: '/geocoding/batch'
+    BATCH_GEO_CODING: '/geocoding'
   }
 };
