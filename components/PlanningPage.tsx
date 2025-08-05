@@ -6,6 +6,7 @@ import { LoadingSpinner, TravelPlanningLoader } from './ui/LoadingSpinner';
 import { Splitter } from './ui/Splitter';
 import { Modal } from './ui/Modal';
 import { AmapComponent } from './ui/AmapComponent';
+import Footer from './ui/Footer';
 import { extractLocationName, isValidCoordinate, updateTravelPlanCoordinates, batchGeocodeAddresses, BatchGeocodingRequest } from '../services/geocodingService';
 
 interface ItineraryViewProps {
@@ -1587,6 +1588,9 @@ export const PlanningPage: React.FC<PlanningPageProps> = ({
           </div>
         </Modal>
       </div>
+      
+      {/* Footer */}
+      <Footer variant="minimal" className="mt-auto" />
     </div>
   );
 };

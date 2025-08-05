@@ -4,6 +4,8 @@ import { Card } from './ui/Card';
 import { APP_NAME } from '../constants';
 import { AppView } from '../types';
 import logoImage from "../components/Logo.png";
+import config from '../config';
+import Footer from './ui/Footer';
 // 导入目的地图片
 import beijing from '../assets/destinations/beijing.jpg';
 import shanghai from '../assets/destinations/shanghai.jpg';
@@ -905,17 +907,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setView }) => {
           </>
         )}
       </div>
-
-      <footer className={`relative z-10 w-full py-8 text-center text-slate-600 ${isElderMode ? 'text-base' : 'text-sm'} transition-opacity duration-1000 ease-out delay-[800ms] ${isMounted ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="max-w-4xl mx-auto px-4">
-          <div className={`flex justify-center ${isElderMode ? 'space-x-8' : 'space-x-4'} mb-3`}>
-            {['关于我们', '使用条款', '隐私政策', '联系我们'].map((item, i) => (
-              <a key={i} href="#" className={`${isElderMode ? 'text-blue-600 font-medium text-lg' : 'text-slate-500'} hover:text-blue-500 transition-colors`}>{item}</a>
-            ))}
-          </div>
-          <p className={isElderMode ? 'text-base mt-4' : ''}>© {new Date().getFullYear()} {APP_NAME}. 版权所有.</p>
-        </div>
-      </footer>
+      
+      {/* Footer */}
+      <Footer variant="minimal" className="mt-auto" />
     </div>
   );
 };

@@ -7,6 +7,7 @@ import { UserDemand } from '../types';
 import { APP_NAME, CITIES } from '../constants';
 import { useElderModeContext } from './ElderModeContext';
 import { Select } from './ui/Select';
+import Footer from './ui/Footer';
 
 
 interface DemandInputPageProps {
